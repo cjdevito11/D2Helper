@@ -1,22 +1,25 @@
-import tkinter as ttk  # This import seems incorrect. It should be:
+import tkinter as tk
 from tkinter import ttk
 import requests
 from utils import schedule_periodic_update
-from zones import zone_mapping  # Importing zone_mapping
+from zones import zone_mapping  # Make sure this is correctly imported
 
 # Global variables
 terrorApi = "https://d2emu.com/api/v1/tz"
-terror_tracker_interface = None
+terror_tracker_window = None
 
 def setup_terror_tracker(root):
-    global terror_tracker_interface
-    terror_tracker_interface = ttk.Frame(root)
-    terror_tracker_interface.pack(fill='both', expand=True)
-    
+    global terror_tracker_window
+    terror_tracker_window = tk.Toplevel(root)
+    terror_tracker_window.attributes("-topmost", True)
+    terror_tracker_window.attributes("-alpha", 0.8)  # Semi-transparent
+    terror_tracker_window.overrideredirect(True)  # No title bar
+    terror_tracker_window.geometry("+1300+15")  # Position in the top-right corner
+
     # Tracking label showing the next terror zone
-    next_terror_label = ttk.Label(terror_tracker_interface, text="Next Terror Zone: Unknown", background="black", foreground="purple", font=("Exocet Heavy", 12))
+    next_terror_label = ttk.Label(terror_tracker_window, text="Unknown", background="black", foreground="purple", font=("Exocet Heavy", 12))
     next_terror_label.pack()
-    
+
     # Schedule the periodic update of the terror zone
     schedule_periodic_update(root, lambda: update_next_terror_zone(next_terror_label), 3600000)
 
@@ -34,11 +37,11 @@ def fetch_terror_data():
 
 def display_next_terror_zone(data, label):
     if "next" in data and len(data["next"]) > 0:
-        next_terror_zone_number = int(data["next"][0])  # Convert zone number to integer
+        next_terror_zone_number = int(data["next"][0])
         next_terror_zone_name = zone_mapping.get(next_terror_zone_number, "Unknown Zone")
-        label.config(text=f"Next Terror Zone: {next_terror_zone_name}")
+        label.config(text=f"{next_terror_zone_name}")
     else:
-        label.config(text="Next Terror Zone not found in data")
+        label.config(text="Unknown")
 
 def update_next_terror_zone(label):
     terror_data = fetch_terror_data()
@@ -46,9 +49,9 @@ def update_next_terror_zone(label):
         display_next_terror_zone(terror_data, label)
 
 def show_terror_tracker():
-    if terror_tracker_interface:
-        terror_tracker_interface.pack(fill='both', expand=True)
+    if terror_tracker_window:
+        terror_tracker_window.deiconify()
 
 def hide_terror_tracker():
-    if terror_tracker_interface:
-        terror_tracker_interface.pack_forget()
+    if terror_tracker_window:
+        terror_tracker_window.withdraw()
