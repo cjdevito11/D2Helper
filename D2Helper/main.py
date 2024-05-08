@@ -82,7 +82,7 @@ def main():
     root = tk.Tk()
     root.overrideredirect(True)
     root.attributes('-topmost', True)
-    root.geometry('30x30+1270+15')
+    root.geometry('25x25+1275+15')
 
     # Set the background to a specific color that will be made transparent
     root.config(bg='white')
@@ -90,6 +90,7 @@ def main():
 
     expand_button = tk.Button(root, text="^", command=lambda: toggle_menu(root))
     expand_button.pack(fill="both", expand=True)
+    expand_button.config(bg='grey')
     
     terrorTracker.setup_terror_tracker(root)
     terrorTracker.show_terror_tracker()  # Assuming this initializes and shows the terror tracker
