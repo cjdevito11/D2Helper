@@ -20,7 +20,7 @@ cd D2Helper
 
 2. Install the required Python packages:
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt ** THIS NEEDS TO BE COMPLETED **
 ```
 
 ## Usage
@@ -31,13 +31,13 @@ To use D2Helper, follow these steps:
 python main.py
 ```
 
-This command starts the application in the system tray with a "^" button positioned at the top right of the screen, which can be used to access various features.
+This command starts the application in the system tray with the next terror zone displayed, and a "^" button positioned at the top right of the screen, which can be used to access various features.
 
 ## Features
 
 * **Terror Tracker**: Shows the next terror zone in real-time.
-* **Rune Helper**: Helps manage and track runes.
-* **Ring Score**: Evaluates and scores rings based on predefined metrics.
+* **Rune Helper**: Helps manage and track runes. Will count all your visible runes and display complete / incomplete runewords & what runes you need to complete them.
+* **Ring Score**: Evaluates and scores rings based on d2jsp standard
 
 ## Contributing to D2Helper
 To contribute to D2Helper, follow these steps:
