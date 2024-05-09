@@ -82,7 +82,7 @@ def main():
     root = tk.Tk()
     root.overrideredirect(True)
     root.attributes('-topmost', True)
-    root.geometry('25x25+1275+15')
+    root.geometry('25x25+1500+25')
 
     # Set the background to a specific color that will be made transparent
     root.config(bg='white')

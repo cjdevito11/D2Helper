@@ -14,7 +14,7 @@ def setup_terror_tracker(root):
     terror_tracker_window.attributes("-topmost", True)
     terror_tracker_window.attributes("-alpha", 0.8)  # Semi-transparent
     terror_tracker_window.overrideredirect(True)  # No title bar
-    terror_tracker_window.geometry("+1300+15")  # Position in the top-right corner
+    terror_tracker_window.geometry("+1385+5")  # Position in the top-right corner
 
     # Tracking label showing the next terror zone
     next_terror_label = ttk.Label(terror_tracker_window, text="Unknown", background="black", foreground="purple", font=("Exocet Heavy", 12))
