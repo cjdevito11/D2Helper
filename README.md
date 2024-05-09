@@ -14,7 +14,7 @@ To install D2Helper, follow these steps:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/D2Helper.git
+git clone https://github.com/cjdevito11/D2Helper.git
 cd D2Helper
 ```
 
