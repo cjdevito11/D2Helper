@@ -1,7 +1,3 @@
-Certainly! Below is a template for a README file that you can use for your GitHub repository, which details how to install your Tkinter-based application and its dependencies. This README includes basic installation instructions, required dependencies, and how to run the application. Adjust the text to fit the specifics of your project as necessary.
-
-### README.md
-
 ```markdown
 # D2Helper
 
