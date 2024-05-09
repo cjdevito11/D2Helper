@@ -1,4 +1,3 @@
-```markdown
 # D2Helper
 
 D2Helper is a utility designed to enhance the gaming experience for Diablo 2 by providing real-time information on terror zones, rune management, and ring scores.
