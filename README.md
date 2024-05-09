@@ -59,16 +59,11 @@ Alternatively, see the GitHub documentation on [creating a pull request](https:/
 
 Thanks to the following people who have contributed to this project:
 
-* [@yourusername](https://github.com/yourusername)
+* [@cjdevito11](https://github.com/cjdevito11)
 
 ## Contact
 
-If you want to contact me you can reach me at <your.email@example.com>.
-
-## License
-
-This project uses the following license: [MIT License](<link_to_license>).
-```
+If you want to contact me you can reach me at <cjdevito11@yahoo.com>.
 
 ### Explanation
 
