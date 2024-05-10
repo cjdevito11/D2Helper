@@ -20,7 +20,7 @@ cd D2Helper
 
 2. Install the required Python packages:
 ```bash
-pip install -r requirements.txt ** THIS NEEDS TO BE COMPLETED **
+pip install -r requirements.txt
 ```
 
 ## Usage
