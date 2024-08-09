@@ -22,7 +22,7 @@ starImg = 'chaosStar.jpg'
 sealImg = 'chaosSeal.jpg'
 sealHoverImg = 'chaosSealHover.jpg'
 
-tp_hotkey = 'x'
+tp_hotkey = 'z'
 teleHotkey = 'j'
 boHotkey = 'g'
 bcHotkey = 'f'
