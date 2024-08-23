@@ -9,6 +9,7 @@ import tkinter as tk
 from tkinter import ttk
 import mouse
 import pygetwindow as gw
+import setup
 
 pytesseract.pytesseract.pytesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
@@ -16,6 +17,8 @@ pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tessera
 speed_multiplier = 0.6  # 10% faster (use 1.1 for 10% slower, etc.)
 
 # Configuration for image paths and hotkeys
+shop_images = ['images/town/jamella/jamella1.jpg','images/town/jamella/jamella2.jpg','images/town/jamella/jamella3.jpg', 'images/town/jamella/jamella4.jpg', 'images/town/jamella/jamella5.jpg','images/town/jamella/jamella6.jpg']
+jamellaSelect = 'images/town/jamella/jamellaSelect.jpg'
 star_images = ['starPart1.jpg', 'starPart2.jpg', 'starPart3.jpg']
 seal_images = ['chaosSeal.jpg', 'chaosSeal1.jpg', 'seal1.jpg', 'seal3.jpg', 'seal4.jpg', 'seal5.jpg', 'seal6.jpg', 'seal8.jpg', 'seal9.jpg', 'seal11.jpg', 'seal12.jpg', 'seal13.jpg']
 waypoint_image = 'wp.jpg' 
@@ -26,11 +29,21 @@ starImg = 'chaosStar.jpg'
 sealImg = 'chaosSeal.jpg'
 sealHoverImg = 'chaosSealHover.jpg'
 
-tp_hotkey = 'F12'
-teleHotkey = 'F4'
-boHotkey = 'F10'
-bcHotkey = 'F9'
+#Fly's Hotkeys (Going to add a config via interface)
+#tp_hotkey = 'F12'
+#teleHotkey = 'F4'
+#boHotkey = 'F10'
+#bcHotkey = 'F9'
+#attackHotkey = 'F1'
+
+#Cj's Hotkeys
+tp_hotkey = 'x'
+teleHotkey = 'j'
+boHotkey = 'g'
+bcHotkey = 'f'
 attackHotkey = 'F1'
+
+hasCTA = False
 
 # Global variables for life and mana
 current_life = None
@@ -51,6 +64,172 @@ def get_screen_position(x_percent, y_percent):
 
 def confirm_act4():
     pass
+
+def confirm_act5():
+    pass
+
+
+## ACT 4 SHOP ##
+
+def walkToShop():
+    shopSteps = [(1825/1900, 1080/1200), (975/1900, 700/1200)]
+    for step in shopSteps:
+        time.sleep(.5)
+        click_at_percentage(*step)
+        time.sleep(2)
+    
+def findShop():
+    print("Looking for Jamella")
+    try:
+        shop_found = False
+        for _ in range(10):
+            for shop_image in shop_images:
+                try:
+                    shopPos = pyautogui.locateOnScreen(shop_image, confidence=0.5)
+                    if shopPos:
+                        shop_found = True
+                        print(f"Jamella found using {shop_image} at {shopPos}.")
+                        pyautogui.moveTo(shopPos)
+                        pyautogui.click()
+                        time.sleep(3)  # Wait a second to ensure movement
+                        break
+                    else:
+                        print("Can't find Shop.")
+                except:
+                    print(f"Issue locating Jamella - Try again")
+                    time.sleep(1)
+            if shop_found:
+                break
+    except Exception as e:
+        print(f"Couldn't findShop(): {e}")
+        
+def openShopTrade():
+    try:
+        time.sleep(1)
+        selectPos = pyautogui.locateOnScreen(jamellaSelect,confidence=0.45)
+        if selectPos:
+            print("Selecting Trade")
+            pyautogui.moveTo(selectPos)
+            #time.sleep(10)
+            pyautogui.click()
+            time.sleep(1)
+    except Exception as e:
+        print("couldn't open shop")
+        
+def shop():
+    tpPos = (625/1900,375/1200)
+    hpPos = (625/1900,725/1200)
+    closePos = (685/1900,65/1200)
+    pyautogui.keyDown('shift')
+    time.sleep(.5)
+    click_at_percentage(*tpPos, 'right')
+    print("BOUGHT TP'S")
+    time.sleep(.5)
+    
+    click_at_percentage(*hpPos, 'right')
+    print("BOUGHT Health Pots")
+    time.sleep(.5)
+    pyautogui.keyUp('shift')
+    time.sleep(.5)
+    click_at_percentage(*closePos)
+    click_at_percentage(*closePos)
+
+def shopToWP():
+    steps = [(1440/1900,270/1200), (120/1900, 120/1200), (850/1900,400/1200)]
+    for step in steps:
+        click_at_percentage(*step)
+        time.sleep(2)
+       
+def prep():
+    walkToShop()
+    findShop()
+    openShopTrade()
+    shop()
+    shopToWP()
+
+#
+# Baal Leech
+#
+
+def wait_for_tp_and_confirm_leader(leader, game_name, password):
+    print("Starting to search for TPs...")
+    while True:
+        try:
+            checkLeaderLeft(leader, game_name, password)
+            tp_positions = list(pyautogui.locateAllOnScreen('tp.png', confidence=0.7))
+            if tp_positions:
+                for tp_pos in tp_positions:
+                    pyautogui.moveTo(tp_pos)
+                    x, y, w, h = tp_pos.left, tp_pos.top, tp_pos.width, tp_pos.height  # Adjust to top-left corner
+                    text_region = (x - 100, y - 100), (x + 100, y - 50)
+                    #text = setup.read_screen_text(region=text_region)
+                    #if leader_name in text:
+                    print(f"Leader's TP found at ({x}, {y}).")
+                    time.sleep(10) # wait 15 seconds for safety
+                    pyautogui.click(tp_pos)
+                    return
+                    #else:
+                    #    print(f"TP at ({x}, {y}) is not the leader's TP.")
+            else:
+                print("No TP found, retrying...")
+            time.sleep(3)
+        except:
+            print("failed tp")
+            time.sleep(3)
+
+# Function to wait for leader to leave and rejoin the next game
+def wait_for_leader_to_leave(leader, game_name, password):
+    x = 0
+    while True:
+        x = x + 1
+        if (x > 100):
+            pass
+        time.sleep(1)
+        print('Waiting for leader to leave')
+        chat_text = setup.read_screen_text(region=(0, 650, 650, 930))  # Adjust region to match chat area
+        print(f'chat_text: {chat_text}')
+        if f"{leader} left our world" in chat_text:
+            print("Leader has left the world")
+            save_and_quit()
+            next_game_name = increment_game_name(game_name)
+            loopBaalLeech(leader,next_game_name,password)
+            #while True:
+                #enter_game(next_game_name, password)
+                #time.sleep(10)
+                #chat_text = setup.read_screen_text(region=(0, 650, 600, 930))  # Adjust region to match chat area
+                #if "Your connection has been interrupted" not in chat_text:
+                    #break
+            break
+
+def checkLeaderLeft(leader, game_name, password):
+    print('Check if Leader Left')
+    chat_text = setup.read_screen_text(region=(0, 650, 650, 930))  # Adjust region to match chat area
+    print(f'chat_text: {chat_text}')
+    if f"{leader} left our world" in chat_text:
+        print("Leader has left the world")
+        save_and_quit()
+        next_game_name = increment_game_name(game_name)
+        loopBaalLeech(leader,next_game_name,password)
+
+def loopBaalLeech(leader,game_name,password):
+    joinGame(game_name, password)
+    confirm_act5()
+    wait_for_tp_and_confirm_leader(leader, game_name, password)
+    preBuff()
+    wait_for_leader_to_leave(leader, game_name, password)
+
+
+
+#Fix if failed to join game
+#Fix if portal opened to area other than Throne
+#Fix if two portals opened
+#Fix if Leader leaves before I enter throne room
+
+
+
+#
+# CHAOS LEAD
+#
 
 def attack(count):
     for _ in range(count):
@@ -251,8 +430,9 @@ def scan_for_items():
             print(f"Unexpected error: {e}")
 
 def preBuff():
-    extract_life_mana_from_screen()
-    hasCTA = True
+    global hasCTA
+    #extract_life_mana_from_screen()
+    time.sleep(1)
     if hasCTA:
         pyautogui.press("w")
         time.sleep(.5)
@@ -294,17 +474,22 @@ def load_pickit_images(pickit_folder):
           
 pickit_images = load_pickit_images(pickit_folder)
 
-def click_at_percentage(x_percent, y_percent):
+def click_at_percentage(x_percent, y_percent, click='left'):
     x, y = get_screen_position(x_percent, y_percent)
     pyautogui.moveTo(x, y)
-    pyautogui.click()
+    if (click == 'left'):
+        print('click left')
+        pyautogui.click()
+    if (click == 'right'):
+        print('click right')
+        pyautogui.click(button='right')
 
 def wpToRiver():
     print("Starting to search for Waypoint...")
     x = 0
     while True:
         try:
-            waypoint_position = pyautogui.locateOnScreen(waypoint_image, confidence=0.4)
+            waypoint_position = pyautogui.locateOnScreen(waypoint_image, confidence=0.35)
             if waypoint_position:
                 print(f"Waypoint found at {waypoint_position}.")
                 pyautogui.moveTo(waypoint_position)
@@ -699,6 +884,8 @@ def check_end_of_chaos(leader, game_name, password):
     return True
 
 def save_and_quit():
+    time.sleep(.5)
+    pyautogui.press('esc')
     click_at_percentage(950/1900, 525/1200)  # Coordinates based on initial resolution
     pyautogui.press('esc')
     time.sleep(.5)
@@ -716,11 +903,11 @@ def increment_game_name(game_name):
         print(f"Error incrementing game name: {e}")
         return game_name  # Return the original game name if there's an error
 
-def enterGame(game_name, password):
+def createGame(game_name, password):
     lobby_pos = (1100/1900, 1050/1200)
-    game_name_pos = (1500/1900, 230/1200)
-    password_pos = (1500/1900, 300/1200)
-    join_game_pos = (1450/1900, 710/1200)
+    game_name_pos = (1500/1900, 220/1200)
+    password_pos = (1500/1900, 290/1200)
+    create_game_pos = (1450/1900, 700/1200)
     
     click_at_percentage(*lobby_pos)
     time.sleep(1)
@@ -731,6 +918,33 @@ def enterGame(game_name, password):
     pyautogui.write(game_name, interval=0.05)
     time.sleep(1)
     
+    click_at_percentage(*password_pos)
+    print(f"Writing password - {password}.")
+    for _ in range(20):
+        pyautogui.press('backspace')
+    pyautogui.write(password, interval=0.05)
+    time.sleep(1)
+    
+    print(f"Joining Game.")
+    click_at_percentage(*create_game_pos)
+    time.sleep(7)
+    
+def joinGame(game_name, password):
+    game_name_pos = (1440/1900, 191/1200)
+    password_pos = (1700/1900, 191/1200)
+    join_game_pos = (1470/1900, 725/1200)
+    
+    #click_at_percentage(*lobby_pos)
+    time.sleep(1)
+    click_at_percentage(*game_name_pos)
+    click_at_percentage(*game_name_pos)
+    print(f"Writing game_name - {game_name}.")
+    for _ in range(20):
+        pyautogui.press('backspace')
+    pyautogui.write(game_name, interval=0.05)
+    time.sleep(1)
+    
+    click_at_percentage(*password_pos)
     click_at_percentage(*password_pos)
     print(f"Writing password - {password}.")
     for _ in range(20):
@@ -760,11 +974,13 @@ def refocus_diablo_window():
     if diablo_window:
         diablo_window.activate()
         time.sleep(2)
-
+ 
 def loop_script(leader, game_name, password):
+    #post_to_discord(game_name, password)
     refocus_diablo_window()
-    enterGame(game_name, password)
+    createGame(game_name, password)
     confirm_act4()
+    prep()
     wpToRiver()
     teleRiver()
     findStarBottom()
@@ -773,50 +989,92 @@ def loop_script(leader, game_name, password):
     check_end_of_chaos(leader, game_name, password)
 
 def create_gui():
+    global hasCTA
     root = tk.Tk()
     root.title("AuraBot")
     root.geometry("300x350+1610+750")
-    root.attributes('-alpha', 0.6)
+    root.attributes('-alpha', 0.9)
 
-    tk.Label(root, text="Game Name").pack()
-    game_name_entry = tk.Entry(root)
-    game_name_entry.pack()
+    # Set the overall theme to dark
+    dark_bg = "#2e2e2e"
+    dark_fg = "#ffffff"
+    entry_bg = "#3e3e3e"
+    entry_fg = "#ffffff"
+    btn_bg = "#4e4e4e"
+    btn_fg = "#ffffff"
+    
+    # Configure the root background
+    root.configure(background=dark_bg)
 
-    tk.Label(root, text="Password").pack()
-    password_entry = tk.Entry(root, show="*")
-    password_entry.pack()
+    # Labels and Entries
+    tk.Label(root, text="Game Name", bg=dark_bg, fg=dark_fg).pack(pady=1)
+    game_name_entry = tk.Entry(root, bg=entry_bg, fg=entry_fg)
+    game_name_entry.pack(pady=1)
 
-    tk.Label(root, text="Leader").pack()
-    leader_entry = tk.Entry(root)
-    leader_entry.pack()
+    tk.Label(root, text="Password", bg=dark_bg, fg=dark_fg).pack(pady=1)
+    password_entry = tk.Entry(root, show="*", bg=entry_bg, fg=entry_fg)
+    password_entry.pack(pady=1)
 
-    tk.Label(root, text="Run Area").pack()
-    run_area = ttk.Combobox(root, values=["Chaos"])
+    tk.Label(root, text="Leader", bg=dark_bg, fg=dark_fg).pack(pady=1)
+    leader_entry = tk.Entry(root, bg=entry_bg, fg=entry_fg)
+    leader_entry.pack(pady=1)
+
+    tk.Label(root, text="Select Script", bg=dark_bg, fg=dark_fg).pack(pady=1)
+    run_area = ttk.Combobox(root, values=["Chaos Lead", "Baal Leecher"])
     run_area.current(0)
-    run_area.pack()
+    run_area.pack(pady=1)
+    
+    tk.Label(root, text="Class", bg=dark_bg, fg=dark_fg).pack(pady=1)
+    playerClass = ttk.Combobox(root, values=["Paladin", "Sorceress"])
+    playerClass.current(0)
+    playerClass.pack(pady=1)
+    
+    hasCTAVar = tk.BooleanVar()
+    hasCTAcheckbox = tk.Checkbutton(root, text="Has CTA", variable=hasCTAVar, bg=dark_bg, fg=dark_fg, selectcolor=entry_bg)
+    hasCTAcheckbox.pack(pady=1)
 
     def start_script():
+        global hasCTA
+        run = run_area.get()
         game_name = game_name_entry.get()
         password = password_entry.get()
         leader = leader_entry.get()
+        
+        hasCTA = hasCTAVar.get()
+        print(f'Has CTA? : {hasCTA}')
+        
         refocus_diablo_window()
-        enterGame(game_name, password)
-        confirm_act4()
-        wpToRiver()
-        teleRiver()
-        findStarBottom()
-        walkChaos()
-        check_end_of_chaos(leader, game_name, password)
-        findSeal()
+        
+        if run == 'Baal Leecher':
+            print("GOT BAAL LEECHER")
+            #refocus_diablo_window()
+            loopBaalLeech(leader,game_name,password)    
+            
+        if run == 'Chaos Lead':
+            print("GOT CHAOS LEECHER")
+            #post_to_discord(game_name, password)
+            #refocus_diablo_window()
+            createGame(game_name, password)
+            confirm_act4()
+            prep()
+            wpToRiver()
+            teleRiver()
+            findStarBottom()
+            openTP()
+            walkChaos()
+            check_end_of_chaos(leader, game_name, password)
 
     def stop_script():
         sys.exit()
 
-    start_button = tk.Button(root, text="Start", command=start_script)
-    start_button.pack()
+    button_frame = tk.Frame(root, bg=dark_bg)
+    button_frame.pack(pady=5)
 
-    stop_button = tk.Button(root, text="Stop", command=stop_script)
-    stop_button.pack()
+    start_button = tk.Button(button_frame, text="Start", command=start_script, bg=btn_bg, fg=btn_fg)
+    start_button.pack(side="left", padx=5)
+
+    stop_button = tk.Button(button_frame, text="Stop", command=stop_script, bg=btn_bg, fg=btn_fg)
+    stop_button.pack(side="left", padx=5)
 
     root.mainloop()
 
