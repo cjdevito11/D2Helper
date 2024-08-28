@@ -10,6 +10,8 @@ from tkinter import ttk
 import mouse
 import pygetwindow as gw
 import setup
+import subprocess
+
 
 pytesseract.pytesseract.pytesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
@@ -18,7 +20,7 @@ speed_multiplier = 0.6  # 10% faster (use 1.1 for 10% slower, etc.)
 
 # Configuration for image paths and hotkeys
 shop_images = ['images/town/jamella/jamella1.jpg','images/town/jamella/jamella2.jpg','images/town/jamella/jamella3.jpg', 'images/town/jamella/jamella4.jpg', 'images/town/jamella/jamella5.jpg','images/town/jamella/jamella6.jpg']
-jamellaSelect = 'images/town/jamella/jamellaSelect.jpg'
+jamellaSelect = 'images/town/jamella/jamellaTrade.jpg'
 star_images = ['starPart1.jpg', 'starPart2.jpg', 'starPart3.jpg']
 seal_images = ['chaosSeal.jpg', 'chaosSeal1.jpg', 'seal1.jpg', 'seal3.jpg', 'seal4.jpg', 'seal5.jpg', 'seal6.jpg', 'seal8.jpg', 'seal9.jpg', 'seal11.jpg', 'seal12.jpg', 'seal13.jpg']
 waypoint_image = 'wp.jpg' 
@@ -30,18 +32,18 @@ sealImg = 'chaosSeal.jpg'
 sealHoverImg = 'chaosSealHover.jpg'
 
 #Fly's Hotkeys (Going to add a config via interface)
-#tp_hotkey = 'F12'
-#teleHotkey = 'F4'
-#boHotkey = 'F10'
-#bcHotkey = 'F9'
-#attackHotkey = 'F1'
+tp_hotkey = 'F12'
+teleHotkey = 'F4'
+boHotkey = 'F10'
+bcHotkey = 'F9'
+attackHotkey = 'F1'
 
 #Cj's Hotkeys
-tp_hotkey = 'x'
-teleHotkey = 'j'
-boHotkey = 'g'
-bcHotkey = 'f'
-attackHotkey = 'F1'
+#tp_hotkey = 'x'
+#teleHotkey = 'j'
+#boHotkey = 'g'
+#bcHotkey = 'f'
+#attackHotkey = 'F1'
 
 hasCTA = False
 
@@ -62,12 +64,52 @@ def get_screen_position(x_percent, y_percent):
     screen_width, screen_height = pyautogui.size()
     return int(screen_width * x_percent), int(screen_height * y_percent)
 
+def confirm_act1():
+    pass
+
 def confirm_act4():
     pass
 
 def confirm_act5():
     pass
 
+## MultiLoad ##
+
+def multi_load_script(leader, game_name, password):
+    #for i in range(1, instance_count + 1):
+        #instance_name = f"Diablo II: Resurrected{i}"
+        #print(f"Handling instance {instance_name}")
+
+    windows = gw.getWindowsWithTitle('Diablo II: Resurrected')
+
+   
+    for i, window in enumerate(windows):
+        print(f"Window {i+1}: {window.title}, Position: {window.left}, {window.top}")
+
+        window.activate()
+        joinGame(game_name, password)
+    waitForLeaderMultiLoader(windows, leader, game_name, password)
+       
+def waitForLeaderMultiLoader(windows, leader, game_name, password):
+    x = 0
+    while True:
+        x = x + 1
+        if (x > 10000):
+            pass
+        time.sleep(.5)
+        print('Waiting for leader to leave')
+        chat_text = setup.read_screen_text(region=(0, 650, 650, 930))  # Adjust region to match chat area
+        print(f'chat_text: {chat_text}')
+        if f"{leader} left our world" in chat_text:
+            print("Leader has left the world")
+            for window in windows:
+                window.activate()
+                time.sleep(.5)
+                save_and_quit()
+                time.sleep(.5)
+            next_game_name = increment_game_name(game_name)
+            multi_load_script(leader,next_game_name,password)
+            break
 
 ## ACT 4 SHOP ##
 
@@ -87,6 +129,7 @@ def findShop():
                 try:
                     shopPos = pyautogui.locateOnScreen(shop_image, confidence=0.5)
                     if shopPos:
+                        time.sleep(.5)
                         shop_found = True
                         print(f"Jamella found using {shop_image} at {shopPos}.")
                         pyautogui.moveTo(shopPos)
@@ -106,11 +149,11 @@ def findShop():
 def openShopTrade():
     try:
         time.sleep(1)
-        selectPos = pyautogui.locateOnScreen(jamellaSelect,confidence=0.45)
+        selectPos = pyautogui.locateOnScreen(jamellaSelect,confidence=0.5)
         if selectPos:
             print("Selecting Trade")
             pyautogui.moveTo(selectPos)
-            #time.sleep(10)
+            time.sleep(5)
             pyautogui.click()
             time.sleep(1)
     except Exception as e:
@@ -542,6 +585,7 @@ def wpToRiver():
         except:
             print("Failed to locate waypoint.")
             time.sleep(5)
+
 def teleRiver():
     preBuff()
     extract_life_mana_from_screen()
@@ -884,19 +928,29 @@ def check_end_of_chaos(leader, game_name, password):
     return True
 
 def save_and_quit():
-    time.sleep(.5)
+    time.sleep(2)
     pyautogui.press('esc')
+    time.sleep(1)
     click_at_percentage(950/1900, 525/1200)  # Coordinates based on initial resolution
-    pyautogui.press('esc')
-    time.sleep(.5)
+    time.sleep(1)
+    #pyautogui.press('esc')
+    #time.sleep(2)
     pyautogui.click(get_screen_position(950/1900, 525/1200))
 
 def increment_game_name(game_name):
     try:
         base_name, num = game_name.rsplit('-', 1)
         print(f"Base name: {base_name}, Current number: {num}")
-        next_num = (int(num) % 99) + 1
-        next_game_name = f"{base_name}-{next_num:02d}"
+        
+        # Determine the length of the number after the dash
+        num_length = len(num)
+        
+        # Increment the number by 1
+        next_num = int(num) + 1
+        
+        # Format the new number with leading zeros to maintain the original length
+        next_game_name = f"{base_name}-{next_num:0{num_length}d}"
+        
         print(f"Next game name: {next_game_name}")
         return next_game_name
     except Exception as e:
@@ -916,23 +970,23 @@ def createGame(game_name, password):
     for _ in range(20):
         pyautogui.press('backspace')
     pyautogui.write(game_name, interval=0.05)
-    time.sleep(1)
+    time.sleep(.5)
     
     click_at_percentage(*password_pos)
     print(f"Writing password - {password}.")
     for _ in range(20):
         pyautogui.press('backspace')
     pyautogui.write(password, interval=0.05)
-    time.sleep(1)
+    time.sleep(.5)
     
     print(f"Joining Game.")
     click_at_percentage(*create_game_pos)
-    time.sleep(7)
+    time.sleep(5)
     
 def joinGame(game_name, password):
-    game_name_pos = (1440/1900, 191/1200)
-    password_pos = (1700/1900, 191/1200)
-    join_game_pos = (1470/1900, 725/1200)
+    game_name_pos = (.7/1, .16/1)
+    password_pos = (.84/1,.16/1 )
+    join_game_pos = (.73/1, .60/1)
     
     #click_at_percentage(*lobby_pos)
     time.sleep(1)
@@ -942,7 +996,7 @@ def joinGame(game_name, password):
     for _ in range(20):
         pyautogui.press('backspace')
     pyautogui.write(game_name, interval=0.05)
-    time.sleep(1)
+    time.sleep(.5)
     
     click_at_percentage(*password_pos)
     click_at_percentage(*password_pos)
@@ -950,11 +1004,11 @@ def joinGame(game_name, password):
     for _ in range(20):
         pyautogui.press('backspace')
     pyautogui.write(password, interval=0.05)
-    time.sleep(1)
-    
+    time.sleep(.5)
+
     print(f"Joining Game.")
     click_at_percentage(*join_game_pos)
-    time.sleep(7)
+    time.sleep(3)
 
 def post_to_discord(game_name, password):
     time.sleep(1)
@@ -992,7 +1046,7 @@ def create_gui():
     global hasCTA
     root = tk.Tk()
     root.title("AuraBot")
-    root.geometry("300x350+1610+750")
+    root.geometry("300x400+1610+750")
     root.attributes('-alpha', 0.9)
 
     # Set the overall theme to dark
@@ -1002,7 +1056,7 @@ def create_gui():
     entry_fg = "#ffffff"
     btn_bg = "#4e4e4e"
     btn_fg = "#ffffff"
-    
+
     # Configure the root background
     root.configure(background=dark_bg)
 
@@ -1020,15 +1074,20 @@ def create_gui():
     leader_entry.pack(pady=1)
 
     tk.Label(root, text="Select Script", bg=dark_bg, fg=dark_fg).pack(pady=1)
-    run_area = ttk.Combobox(root, values=["Chaos Lead", "Baal Leecher"])
+    run_area = ttk.Combobox(root, values=["Chaos Lead", "Baal Leecher", "MultiLoad"])
     run_area.current(0)
     run_area.pack(pady=1)
-    
+
     tk.Label(root, text="Class", bg=dark_bg, fg=dark_fg).pack(pady=1)
     playerClass = ttk.Combobox(root, values=["Paladin", "Sorceress"])
     playerClass.current(0)
     playerClass.pack(pady=1)
-    
+
+    tk.Label(root, text="Instances (1-7)", bg=dark_bg, fg=dark_fg).pack(pady=1)
+    instance_count_entry = ttk.Combobox(root, values=[str(i) for i in range(1, 8)])
+    instance_count_entry.current(0)
+    instance_count_entry.pack(pady=1)
+
     hasCTAVar = tk.BooleanVar()
     hasCTAcheckbox = tk.Checkbutton(root, text="Has CTA", variable=hasCTAVar, bg=dark_bg, fg=dark_fg, selectcolor=entry_bg)
     hasCTAcheckbox.pack(pady=1)
@@ -1039,21 +1098,17 @@ def create_gui():
         game_name = game_name_entry.get()
         password = password_entry.get()
         leader = leader_entry.get()
-        
+        instance_count = int(instance_count_entry.get())
+
         hasCTA = hasCTAVar.get()
         print(f'Has CTA? : {hasCTA}')
-        
+
         refocus_diablo_window()
-        
+
         if run == 'Baal Leecher':
-            print("GOT BAAL LEECHER")
-            #refocus_diablo_window()
-            loopBaalLeech(leader,game_name,password)    
-            
-        if run == 'Chaos Lead':
-            print("GOT CHAOS LEECHER")
-            #post_to_discord(game_name, password)
-            #refocus_diablo_window()
+            loopBaalLeech(leader, game_name, password)
+
+        elif run == 'Chaos Lead':
             createGame(game_name, password)
             confirm_act4()
             prep()
@@ -1063,6 +1118,23 @@ def create_gui():
             openTP()
             walkChaos()
             check_end_of_chaos(leader, game_name, password)
+
+        elif run == 'MultiLoad':
+            multi_load_script(leader, game_name, password)
+
+    def stop_script():
+        sys.exit()
+
+    button_frame = tk.Frame(root, bg=dark_bg)
+    button_frame.pack(pady=5)
+
+    start_button = tk.Button(button_frame, text="Start", command=start_script, bg=btn_bg, fg=btn_fg)
+    start_button.pack(side="left", padx=5)
+
+    stop_button = tk.Button(button_frame, text="Stop", command=stop_script, bg=btn_bg, fg=btn_fg)
+    stop_button.pack(side="left", padx=5)
+
+    root.mainloop()
 
     def stop_script():
         sys.exit()
