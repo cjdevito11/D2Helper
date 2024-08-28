@@ -1,0 +1,48 @@
+Shadow Greater Talons
++3 to Shadow Disciplines (Assassin Only)
++3 to Venom (Assassin Only)
++3 to Fade (Assassin Only)
+
+Shadow Greater Talons
++3 to Shadow Disciplines (Assassin Only)
++3 to Venom (Assassin Only)
+
+Shadow Greater Talons
++3 to Shadow Disciplines (Assassin Only)
++3 to Fade (Assassin Only)
+
+Cunning Greater Talons of Regeneration
++3 to Traps (Assassin Only)
++3 to Lightning Sentry (Assassin Only)
+Replenish Life +5
+
+Witch-hunter's Greater Talons of Regeneration
++2 to Assassin Skill Levels
++3 to Lightning Sentry (Assassin Only)
+Replenish Life +5
+
+Artisan's Greater Talons of Quickness
++40% Increased Attack Speed
++3 to Lightning Sentry (Assassin Only)
+Socketed (3)
+
+Jeweler's Greater Talons of Quickness
++40% Increased Attack Speed
++3 to Lightning Sentry (Assassin Only)
+Socketed (3)
+
+Fool's Greater Talons of Quickness
++40% Increased Attack Speed
++49 to Maximum Damage (Based on Character Level)
++1633 to Attack Rating (Based on Character Level)
++3 to Lightning Sentry (Assassin Only)
+
+Cunning Greater Talons of Quickness
++3 to Traps (Assassin Only)
++40% Increased Attack Speed
++3 to Lightning Sentry (Assassin Only)
+
+Witch-hunter's Greater Talons of Quickness
++2 to Assassin Skill Levels
++40% Increased Attack Speed
++3 to Lightning Sentry (Assassin Only)

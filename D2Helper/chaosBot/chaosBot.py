@@ -18,7 +18,7 @@ speed_multiplier = 0.6  # 10% faster (use 1.1 for 10% slower, etc.)
 
 # Configuration for image paths and hotkeys
 shop_images = ['images/town/jamella/jamella1.jpg','images/town/jamella/jamella2.jpg','images/town/jamella/jamella3.jpg', 'images/town/jamella/jamella4.jpg', 'images/town/jamella/jamella5.jpg','images/town/jamella/jamella6.jpg']
-jamellaSelect = 'images/town/jamella/jamellaSelect.jpg'
+jamellaSelect = 'images/town/jamella/jamellaTrade.jpg'
 star_images = ['starPart1.jpg', 'starPart2.jpg', 'starPart3.jpg']
 seal_images = ['chaosSeal.jpg', 'chaosSeal1.jpg', 'seal1.jpg', 'seal3.jpg', 'seal4.jpg', 'seal5.jpg', 'seal6.jpg', 'seal8.jpg', 'seal9.jpg', 'seal11.jpg', 'seal12.jpg', 'seal13.jpg']
 waypoint_image = 'wp.jpg' 
@@ -30,18 +30,18 @@ sealImg = 'chaosSeal.jpg'
 sealHoverImg = 'chaosSealHover.jpg'
 
 #Fly's Hotkeys (Going to add a config via interface)
-#tp_hotkey = 'F12'
-#teleHotkey = 'F4'
-#boHotkey = 'F10'
-#bcHotkey = 'F9'
-#attackHotkey = 'F1'
+tp_hotkey = 'F12'
+teleHotkey = 'F4'
+boHotkey = 'F10'
+bcHotkey = 'F9'
+attackHotkey = 'F1'
 
 #Cj's Hotkeys
-tp_hotkey = 'x'
-teleHotkey = 'j'
-boHotkey = 'g'
-bcHotkey = 'f'
-attackHotkey = 'F1'
+#tp_hotkey = 'x'
+#teleHotkey = 'j'
+#boHotkey = 'g'
+#bcHotkey = 'f'
+#attackHotkey = 'F1'
 
 hasCTA = False
 
@@ -87,6 +87,7 @@ def findShop():
                 try:
                     shopPos = pyautogui.locateOnScreen(shop_image, confidence=0.5)
                     if shopPos:
+                        time.sleep(.5)
                         shop_found = True
                         print(f"Jamella found using {shop_image} at {shopPos}.")
                         pyautogui.moveTo(shopPos)
@@ -106,11 +107,11 @@ def findShop():
 def openShopTrade():
     try:
         time.sleep(1)
-        selectPos = pyautogui.locateOnScreen(jamellaSelect,confidence=0.45)
+        selectPos = pyautogui.locateOnScreen(jamellaSelect,confidence=0.5)
         if selectPos:
             print("Selecting Trade")
             pyautogui.moveTo(selectPos)
-            #time.sleep(10)
+            time.sleep(5)
             pyautogui.click()
             time.sleep(1)
     except Exception as e:
@@ -895,8 +896,14 @@ def increment_game_name(game_name):
     try:
         base_name, num = game_name.rsplit('-', 1)
         print(f"Base name: {base_name}, Current number: {num}")
-        next_num = (int(num) % 99) + 1
-        next_game_name = f"{base_name}-{next_num:02d}"
+        
+        # Determine the length of the number after the dash
+        num_length = len(num)
+        
+        # Increment the number and format it with the same length as the original
+        next_num = (int(num) % 999) + 1  # Handles up to 3 digits
+        next_game_name = f"{base_name}-{next_num:0{num_length}d}"
+        
         print(f"Next game name: {next_game_name}")
         return next_game_name
     except Exception as e:
@@ -916,30 +923,30 @@ def createGame(game_name, password):
     for _ in range(20):
         pyautogui.press('backspace')
     pyautogui.write(game_name, interval=0.05)
-    time.sleep(1)
+    time.sleep(.5)
     
     click_at_percentage(*password_pos)
     print(f"Writing password - {password}.")
     for _ in range(20):
         pyautogui.press('backspace')
     pyautogui.write(password, interval=0.05)
-    time.sleep(1)
+    time.sleep(.5)
     
     print(f"Joining Game.")
     click_at_percentage(*create_game_pos)
-    time.sleep(7)
+    time.sleep(5)
     
 def joinGame(game_name, password):
-    game_name_pos = (1440/1900, 191/1200)
-    password_pos = (1700/1900, 191/1200)
-    join_game_pos = (1470/1900, 725/1200)
+    game_name_pos = (.7/1, .16/1)
+    password_pos = (.84/1,.16/1 )
+    join_game_pos = (.73/1, .60/1)
     
     #click_at_percentage(*lobby_pos)
     time.sleep(1)
     click_at_percentage(*game_name_pos)
     click_at_percentage(*game_name_pos)
     print(f"Writing game_name - {game_name}.")
-    for _ in range(20):
+    for _ in range(100):
         pyautogui.press('backspace')
     pyautogui.write(game_name, interval=0.05)
     time.sleep(1)
@@ -951,7 +958,7 @@ def joinGame(game_name, password):
         pyautogui.press('backspace')
     pyautogui.write(password, interval=0.05)
     time.sleep(1)
-    
+
     print(f"Joining Game.")
     click_at_percentage(*join_game_pos)
     time.sleep(7)
@@ -1054,8 +1061,8 @@ def create_gui():
             print("GOT CHAOS LEECHER")
             #post_to_discord(game_name, password)
             #refocus_diablo_window()
-            createGame(game_name, password)
-            confirm_act4()
+            #createGame(game_name, password)
+            #confirm_act4()
             prep()
             wpToRiver()
             teleRiver()
