@@ -19,31 +19,36 @@ pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tessera
 speed_multiplier = 0.6  # 10% faster (use 1.1 for 10% slower, etc.)
 
 # Configuration for image paths and hotkeys
-shop_images = ['images/town/jamella/jamella1.jpg','images/town/jamella/jamella2.jpg','images/town/jamella/jamella3.jpg', 'images/town/jamella/jamella4.jpg', 'images/town/jamella/jamella5.jpg','images/town/jamella/jamella6.jpg']
-jamellaSelect = 'images/town/jamella/jamellaTrade.jpg'
-star_images = ['starPart1.jpg', 'starPart2.jpg', 'starPart3.jpg']
-seal_images = ['chaosSeal.jpg', 'chaosSeal1.jpg', 'seal1.jpg', 'seal3.jpg', 'seal4.jpg', 'seal5.jpg', 'seal6.jpg', 'seal8.jpg', 'seal9.jpg', 'seal11.jpg', 'seal12.jpg', 'seal13.jpg']
-waypoint_image = 'wp.jpg' 
-riverwaypoint_image = 'riverWP.jpg'
-river_image = 'riverOfFlameWP.jpg'
-river_terror_image = 'riverTerrorWp.jpg'
-starImg = 'chaosStar.jpg'
-sealImg = 'chaosSeal.jpg'
-sealHoverImg = 'chaosSealHover.jpg'
+shop_images = ['images/town/act4/jamella/jamella1.jpg','images/town/act4/jamella/jamella2.jpg','images/town/act4/jamella/jamella3.jpg', 'images/town/act4/jamella/jamella4.jpg', 'images/town/act4/jamella/jamella5.jpg','images/town/act4/jamella/jamella6.jpg']
+jamellaSelect = 'images/town/act4/jamella/jamellaSelect.jpg'
+star_images = ['images/chaos/star/starPart1.jpg', 'images/chaos/star/starPart2.jpg', 'images/chaos/star/starPart3.jpg']
+seal_images = ['images/chaos/seals/chaosSeal.jpg', 'images/chaos/seals/chaosSeal1.jpg', 'images/chaos/seals/seal1.jpg', 'images/chaos/seals/seal3.jpg', 'images/chaos/seals/seal4.jpg',
+                'images/chaos/seals/seal5.jpg', 'images/chaos/seals/seal6.jpg', 'images/chaos/seals/seal8.jpg', 'images/chaos/seals/seal9.jpg', 'images/chaos/seals/seal11.jpg',
+                    'images/chaos/seals/seal12.jpg', 'images/chaos/seals/seal13.jpg']
+waypoint_image = 'images/town/act4/waypoint/wp.jpg' 
+riverwaypoint_image = 'images/town/act4/waypoint/riverWP.jpg'
+river_image = 'images/town/act4/waypoint/riverOfFlameWP.jpg'
+river_terror_image = 'images/town/act4/waypoint/riverTerrorWp.jpg'
+starImg = 'images/chaos/star/chaosStar.jpg'
+sealImg = 'images/chaos/seals/chaosSeal.jpg'
+sealHoverImg = 'images/chaos/seals/chaosSealHover.jpg'
+
+#errors
+failedToJoinImg = 'images/errors/lobby/failedToJoin.png'
 
 #Fly's Hotkeys (Going to add a config via interface)
-tp_hotkey = 'F12'
-teleHotkey = 'F4'
-boHotkey = 'F10'
-bcHotkey = 'F9'
-attackHotkey = 'F1'
+#tp_hotkey = 'F12'
+#teleHotkey = 'F4'
+#boHotkey = 'F10'
+#bcHotkey = 'F9'
+#attackHotkey = 'F1'
 
 #Cj's Hotkeys
-#tp_hotkey = 'x'
-#teleHotkey = 'j'
-#boHotkey = 'g'
-#bcHotkey = 'f'
-#attackHotkey = 'F1'
+tp_hotkey = 'x'
+teleHotkey = 'j'
+boHotkey = 'g'
+bcHotkey = 'f'
+attackHotkey = 'F1'
 
 hasCTA = False
 
@@ -64,15 +69,48 @@ def get_screen_position(x_percent, y_percent):
     screen_width, screen_height = pyautogui.size()
     return int(screen_width * x_percent), int(screen_height * y_percent)
 
-def confirm_act1():
-    pass
+def confirmAct1Load():
+    confirmPos = pyautogui.locateOnScreen('images/town/act1/confirm/confirm1.png', confidence=0.45)
+    if confirmPos:
+        print(f"Confirmed Act1 Pos: {confirmPos}")
+        return True
+    
+def confirmAct2Load():
+    confirmPos = pyautogui.locateOnScreen('images/town/act1/confirm/confirm1.png', confidence=0.45)
+    if confirmPos:
+        print(f"Confirmed Act2 Pos: {confirmPos}")
+        return True
+    
+def confirmAct3Load():
+    confirmPos = pyautogui.locateOnScreen('images/town/act1/confirm/confirm1.png', confidence=0.45)
+    if confirmPos:
+        print(f"Confirmed Act3 Pos: {confirmPos}")
+        return True
+    
+def confirmAct4Load():
+    confirmPos = pyautogui.locateOnScreen('images/town/act4/confirm/confirm1.png', confidence=0.45)
+    if confirmPos:
+        print(f"Confirmed Act4 Pos: {confirmPos}")
+        return True
 
-def confirm_act4():
-    pass
+def confirmAct5Load():
+    confirmPos = pyautogui.locateOnScreen('images/town/act5/confirm/confirm1.png', confidence=0.45)
+    if confirmPos:
+        print(f"Confirmed Act5 Pos: {confirmPos}")
+        return True
 
-def confirm_act5():
-    pass
-
+def whatAct():
+    if confirmAct1Load():
+        return '1'
+    if confirmAct2Load():
+        return '2'
+    if confirmAct3Load():
+        return '3'
+    if confirmAct4Load():
+        return '4'
+    if confirmAct5Load():
+        return '5'
+    
 ## MultiLoad ##
 
 def multi_load_script(leader, game_name, password):
@@ -199,7 +237,7 @@ def wait_for_tp_and_confirm_leader(leader, game_name, password):
     while True:
         try:
             checkLeaderLeft(leader, game_name, password)
-            tp_positions = list(pyautogui.locateAllOnScreen('tp.png', confidence=0.7))
+            tp_positions = list(pyautogui.locateAllOnScreen('images/general/tp.png', confidence=0.7))
             if tp_positions:
                 for tp_pos in tp_positions:
                     pyautogui.moveTo(tp_pos)
@@ -256,7 +294,9 @@ def checkLeaderLeft(leader, game_name, password):
 
 def loopBaalLeech(leader,game_name,password):
     joinGame(game_name, password)
-    confirm_act5()
+    #confirmAct5Load()
+    act = whatAct()
+    print(f'In act: {act}')
     wait_for_tp_and_confirm_leader(leader, game_name, password)
     preBuff()
     wait_for_leader_to_leave(leader, game_name, password)
@@ -518,14 +558,20 @@ def load_pickit_images(pickit_folder):
 pickit_images = load_pickit_images(pickit_folder)
 
 def click_at_percentage(x_percent, y_percent, click='left'):
+    if not (0 <= x_percent <= 1) or not (0 <= y_percent <= 1):
+        print(f"Invalid percentage coordinates: x={x_percent}, y={y_percent}")
+        return
     x, y = get_screen_position(x_percent, y_percent)
     pyautogui.moveTo(x, y)
-    if (click == 'left'):
-        print('click left')
+    if click == 'left':
+        print('Clicking left')
         pyautogui.click()
-    if (click == 'right'):
-        print('click right')
+    elif click == 'right':
+        print('Clicking right')
         pyautogui.click(button='right')
+    else:
+        print(f"Unknown click type: {click}")
+
 
 def wpToRiver():
     print("Starting to search for Waypoint...")
@@ -921,10 +967,10 @@ def check_end_of_chaos(leader, game_name, password):
     if True:
         save_and_quit()
         next_game_name = increment_game_name(game_name)
-        loop_script(leader, next_game_name, password)
+        loopDiabloLead(leader, next_game_name, password)
     else:
         next_game_name = increment_game_name(game_name)
-        loop_script(leader, next_game_name, password)
+        loopDiabloLead(leader, next_game_name, password)
     return True
 
 def save_and_quit():
@@ -987,15 +1033,16 @@ def joinGame(game_name, password):
     game_name_pos = (.7/1, .16/1)
     password_pos = (.84/1,.16/1 )
     join_game_pos = (.73/1, .60/1)
-    
-    #click_at_percentage(*lobby_pos)
+    attempts = 10
+    attemptCounter = 0
+
     time.sleep(1)
     click_at_percentage(*game_name_pos)
     click_at_percentage(*game_name_pos)
     print(f"Writing game_name - {game_name}.")
     for _ in range(20):
         pyautogui.press('backspace')
-    pyautogui.write(game_name, interval=0.05)
+    pyautogui.write(game_name, interval=0.053)
     time.sleep(.5)
     
     click_at_percentage(*password_pos)
@@ -1003,12 +1050,41 @@ def joinGame(game_name, password):
     print(f"Writing password - {password}.")
     for _ in range(20):
         pyautogui.press('backspace')
-    pyautogui.write(password, interval=0.05)
+    pyautogui.write(password, interval=0.06)
     time.sleep(.5)
 
-    print(f"Joining Game.")
-    click_at_percentage(*join_game_pos)
-    time.sleep(3)
+    while attemptCounter < attempts:
+        print(f"Joining Game.")
+        click_at_percentage(*join_game_pos)
+        time.sleep(1)
+
+        failedToJoin = checkFailedToJoinGame()
+        if failedToJoin == False:
+            return
+        
+        time.sleep(2)
+        attemptCounter = attemptCounter + 1
+
+    print('Too many join game attempts. Sleeping for long time')
+    time.sleep(10000000)
+    sys.exit()
+
+    #if (attemptCounter == attempts):
+    #    time.sleep(30)
+    #    next_game_name = increment_game_name(game_name)
+    #    joinGame(next_game_name,password)
+
+
+        
+def checkFailedToJoinGame():
+    failedPos = pyautogui.locateOnScreen(failedToJoinImg, confidence=0.50)
+    if failedPos:
+        print('Failed to join game')
+        time.sleep(2)
+        click_at_percentage(.5/1,.52/1)
+        return True
+    else:
+        return False
 
 def post_to_discord(game_name, password):
     time.sleep(1)
@@ -1029,11 +1105,14 @@ def refocus_diablo_window():
         diablo_window.activate()
         time.sleep(2)
  
-def loop_script(leader, game_name, password):
+def loopDiabloLead(leader, game_name, password):
     #post_to_discord(game_name, password)
     refocus_diablo_window()
     createGame(game_name, password)
-    confirm_act4()
+    act = whatAct()
+    if act != '4':
+        print(f'In Act {act} - Not in act 4 - NAVIGATE')
+        # Handle being in other acts.
     prep()
     wpToRiver()
     teleRiver()
@@ -1109,32 +1188,10 @@ def create_gui():
             loopBaalLeech(leader, game_name, password)
 
         elif run == 'Chaos Lead':
-            createGame(game_name, password)
-            confirm_act4()
-            prep()
-            wpToRiver()
-            teleRiver()
-            findStarBottom()
-            openTP()
-            walkChaos()
-            check_end_of_chaos(leader, game_name, password)
+            loopDiabloLead(leader, game_name, password)
 
         elif run == 'MultiLoad':
             multi_load_script(leader, game_name, password)
-
-    def stop_script():
-        sys.exit()
-
-    button_frame = tk.Frame(root, bg=dark_bg)
-    button_frame.pack(pady=5)
-
-    start_button = tk.Button(button_frame, text="Start", command=start_script, bg=btn_bg, fg=btn_fg)
-    start_button.pack(side="left", padx=5)
-
-    stop_button = tk.Button(button_frame, text="Stop", command=stop_script, bg=btn_bg, fg=btn_fg)
-    stop_button.pack(side="left", padx=5)
-
-    root.mainloop()
 
     def stop_script():
         sys.exit()
