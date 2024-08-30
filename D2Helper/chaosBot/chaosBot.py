@@ -113,7 +113,7 @@ def whatAct():
     
 ## MultiLoad ##
 
-def multi_load_script(leader, game_name, password):
+def multi_load_script(leader, game_name, password,battletag = 'none'):
     #for i in range(1, instance_count + 1):
         #instance_name = f"Diablo II: Resurrected{i}"
         #print(f"Handling instance {instance_name}")
@@ -126,9 +126,9 @@ def multi_load_script(leader, game_name, password):
 
         window.activate()
         joinGame(game_name, password)
-    waitForLeaderMultiLoader(windows, leader, game_name, password)
+    waitForLeaderMultiLoader(windows, leader, game_name, password,battletag)
        
-def waitForLeaderMultiLoader(windows, leader, game_name, password):
+def waitForLeaderMultiLoader(windows, leader, game_name, password,battletag):
     x = 0
     while True:
         x = x + 1
@@ -138,7 +138,7 @@ def waitForLeaderMultiLoader(windows, leader, game_name, password):
         print('Waiting for leader to leave')
         chat_text = setup.read_screen_text(region=(0, 650, 650, 930))  # Adjust region to match chat area
         print(f'chat_text: {chat_text}')
-        if f"{leader} left our world" in chat_text:
+        if (f"{leader} left our world" in chat_text) or (f"{battletag} left our world" in chat_text):
             print("Leader has left the world")
             for window in windows:
                 window.activate()
@@ -146,7 +146,7 @@ def waitForLeaderMultiLoader(windows, leader, game_name, password):
                 save_and_quit()
                 time.sleep(.5)
             next_game_name = increment_game_name(game_name)
-            multi_load_script(leader,next_game_name,password)
+            multi_load_script(leader,next_game_name,password,battletag)
             break
 
 ## ACT 4 SHOP ##
@@ -232,11 +232,11 @@ def prep():
 # Baal Leech
 #
 
-def wait_for_tp_and_confirm_leader(leader, game_name, password):
+def wait_for_tp_and_confirm_leader(leader, game_name, password,battletag):
     print("Starting to search for TPs...")
     while True:
         try:
-            checkLeaderLeft(leader, game_name, password)
+            checkLeaderLeft(leader, game_name, password,battletag)
             tp_positions = list(pyautogui.locateAllOnScreen('images/general/tp.png', confidence=0.7))
             if tp_positions:
                 for tp_pos in tp_positions:
@@ -259,7 +259,7 @@ def wait_for_tp_and_confirm_leader(leader, game_name, password):
             time.sleep(3)
 
 # Function to wait for leader to leave and rejoin the next game
-def wait_for_leader_to_leave(leader, game_name, password):
+def wait_for_leader_to_leave(leader, game_name, password, battletag ='none'):
     x = 0
     while True:
         x = x + 1
@@ -269,11 +269,11 @@ def wait_for_leader_to_leave(leader, game_name, password):
         print('Waiting for leader to leave')
         chat_text = setup.read_screen_text(region=(0, 650, 650, 930))  # Adjust region to match chat area
         print(f'chat_text: {chat_text}')
-        if f"{leader} left our world" in chat_text:
+        if (f"{leader} left our world" in chat_text) or (f"{battletag} left our world" in chat_text):
             print("Leader has left the world")
             save_and_quit()
             next_game_name = increment_game_name(game_name)
-            loopBaalLeech(leader,next_game_name,password)
+            loopBaalLeech(leader,next_game_name,password,battletag)
             #while True:
                 #enter_game(next_game_name, password)
                 #time.sleep(10)
@@ -282,7 +282,7 @@ def wait_for_leader_to_leave(leader, game_name, password):
                     #break
             break
 
-def checkLeaderLeft(leader, game_name, password):
+def checkLeaderLeft(leader, game_name, password,battletag):
     print('Check if Leader Left')
     chat_text = setup.read_screen_text(region=(0, 650, 650, 930))  # Adjust region to match chat area
     print(f'chat_text: {chat_text}')
@@ -290,16 +290,16 @@ def checkLeaderLeft(leader, game_name, password):
         print("Leader has left the world")
         save_and_quit()
         next_game_name = increment_game_name(game_name)
-        loopBaalLeech(leader,next_game_name,password)
+        loopBaalLeech(leader,next_game_name,password,battletag)
 
-def loopBaalLeech(leader,game_name,password):
+def loopBaalLeech(leader,game_name,password, battletag):
     joinGame(game_name, password)
     #confirmAct5Load()
     act = whatAct()
     print(f'In act: {act}')
-    wait_for_tp_and_confirm_leader(leader, game_name, password)
+    wait_for_tp_and_confirm_leader(leader, game_name, password,battletag)
     preBuff()
-    wait_for_leader_to_leave(leader, game_name, password)
+    wait_for_leader_to_leave(leader, game_name, password, battletag)
 
 
 
@@ -1061,10 +1061,11 @@ def joinGame(game_name, password):
         failedToJoin = checkFailedToJoinGame()
         if failedToJoin == False:
             return
-        
         time.sleep(2)
         attemptCounter = attemptCounter + 1
 
+    print('Too many join game attempts. Sleeping for long time')
+    quit()
     print('Too many join game attempts. Sleeping for long time')
     time.sleep(10000000)
     sys.exit()
@@ -1077,14 +1078,21 @@ def joinGame(game_name, password):
 
         
 def checkFailedToJoinGame():
-    failedPos = pyautogui.locateOnScreen(failedToJoinImg, confidence=0.50)
-    if failedPos:
-        print('Failed to join game')
-        time.sleep(2)
-        click_at_percentage(.5/1,.52/1)
-        return True
-    else:
+    try:
+        time.sleep(1)
+        failedPos = pyautogui.locateOnScreen(failedToJoinImg, confidence=0.50)
+        if failedPos:
+            print('Failed to join game')
+            time.sleep(2)
+            click_at_percentage(.5/1,.52/1)
+            return True
+        else:
+            return False
+        
+    except:
+        print('cant find failed game')
         return False
+            
 
 def post_to_discord(game_name, password):
     time.sleep(1)
@@ -1151,6 +1159,10 @@ def create_gui():
     tk.Label(root, text="Leader", bg=dark_bg, fg=dark_fg).pack(pady=1)
     leader_entry = tk.Entry(root, bg=entry_bg, fg=entry_fg)
     leader_entry.pack(pady=1)
+    
+    tk.Label(root, text="BattleTag", bg=dark_bg, fg=dark_fg).pack(pady=1)
+    battletag_entry = tk.Entry(root, bg=entry_bg, fg=entry_fg)
+    battletag_entry.pack(pady=1)
 
     tk.Label(root, text="Select Script", bg=dark_bg, fg=dark_fg).pack(pady=1)
     run_area = ttk.Combobox(root, values=["Chaos Lead", "Baal Leecher", "MultiLoad"])
@@ -1162,11 +1174,6 @@ def create_gui():
     playerClass.current(0)
     playerClass.pack(pady=1)
 
-    tk.Label(root, text="Instances (1-7)", bg=dark_bg, fg=dark_fg).pack(pady=1)
-    instance_count_entry = ttk.Combobox(root, values=[str(i) for i in range(1, 8)])
-    instance_count_entry.current(0)
-    instance_count_entry.pack(pady=1)
-
     hasCTAVar = tk.BooleanVar()
     hasCTAcheckbox = tk.Checkbutton(root, text="Has CTA", variable=hasCTAVar, bg=dark_bg, fg=dark_fg, selectcolor=entry_bg)
     hasCTAcheckbox.pack(pady=1)
@@ -1177,7 +1184,8 @@ def create_gui():
         game_name = game_name_entry.get()
         password = password_entry.get()
         leader = leader_entry.get()
-        instance_count = int(instance_count_entry.get())
+        battletag = battletag_entry.get()
+        
 
         hasCTA = hasCTAVar.get()
         print(f'Has CTA? : {hasCTA}')
@@ -1185,13 +1193,13 @@ def create_gui():
         refocus_diablo_window()
 
         if run == 'Baal Leecher':
-            loopBaalLeech(leader, game_name, password)
+            loopBaalLeech(leader, game_name, password,battletag)
 
         elif run == 'Chaos Lead':
             loopDiabloLead(leader, game_name, password)
 
         elif run == 'MultiLoad':
-            multi_load_script(leader, game_name, password)
+            multi_load_script(leader, game_name, password,battletag)
 
     def stop_script():
         sys.exit()
