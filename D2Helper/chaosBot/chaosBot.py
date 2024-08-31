@@ -11,7 +11,7 @@ import mouse
 import pygetwindow as gw
 import setup
 import subprocess
-
+from scripts.bosses.baal import sorceress
 
 pytesseract.pytesseract.pytesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
@@ -45,7 +45,7 @@ failedToJoinImg = 'images/errors/lobby/failedToJoin.png'
 
 #Cj's Hotkeys
 tp_hotkey = 'x'
-teleHotkey = 'j'
+teleHotkey = 'f'
 boHotkey = 'g'
 bcHotkey = 'f'
 attackHotkey = 'F1'
@@ -266,6 +266,9 @@ def wait_for_leader_to_leave(leader, game_name, password, battletag ='none'):
         if (x > 100):
             pass
         time.sleep(1)
+
+        sorceress.hydraBaal()
+
         print('Waiting for leader to leave')
         chat_text = setup.read_screen_text(region=(0, 650, 650, 930))  # Adjust region to match chat area
         print(f'chat_text: {chat_text}')
@@ -295,8 +298,8 @@ def checkLeaderLeft(leader, game_name, password,battletag):
 def loopBaalLeech(leader,game_name,password, battletag):
     joinGame(game_name, password)
     #confirmAct5Load()
-    act = whatAct()
-    print(f'In act: {act}')
+    #act = whatAct()
+    #print(f'In act: {act}')
     wait_for_tp_and_confirm_leader(leader, game_name, password,battletag)
     preBuff()
     wait_for_leader_to_leave(leader, game_name, password, battletag)
@@ -1030,8 +1033,8 @@ def createGame(game_name, password):
     time.sleep(5)
     
 def joinGame(game_name, password):
-    game_name_pos = (.7/1, .16/1)
-    password_pos = (.84/1,.16/1 )
+    game_name_pos = (.72/1, .16/1)
+    password_pos = (.86/1,.16/1 )
     join_game_pos = (.73/1, .60/1)
     attempts = 10
     attemptCounter = 0
@@ -1185,7 +1188,6 @@ def create_gui():
         password = password_entry.get()
         leader = leader_entry.get()
         battletag = battletag_entry.get()
-        
 
         hasCTA = hasCTAVar.get()
         print(f'Has CTA? : {hasCTA}')
