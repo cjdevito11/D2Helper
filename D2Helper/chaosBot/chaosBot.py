@@ -11,9 +11,18 @@ import mouse
 import pygetwindow as gw
 import setup
 import subprocess
-from scripts.bosses.baal import sorceress
+import discord
+from discord.ext import commands
 
-pytesseract.pytesseract.pytesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+intents = discord.Intents.default()
+intents.typing = True
+intents.messages = True
+intents.message_content = True
+#bot = commands.Bot(intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+
+
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 speed_multiplier = 0.6  # 10% faster (use 1.1 for 10% slower, etc.)
@@ -32,7 +41,7 @@ river_terror_image = 'images/town/act4/waypoint/riverTerrorWp.jpg'
 starImg = 'images/chaos/star/chaosStar.jpg'
 sealImg = 'images/chaos/seals/chaosSeal.jpg'
 sealHoverImg = 'images/chaos/seals/chaosSealHover.jpg'
-
+portalToThrone = 'images/general/PortalToThrone.png'
 #errors
 failedToJoinImg = 'images/errors/lobby/failedToJoin.png'
 
@@ -45,7 +54,7 @@ failedToJoinImg = 'images/errors/lobby/failedToJoin.png'
 
 #Cj's Hotkeys
 tp_hotkey = 'x'
-teleHotkey = 'f'
+teleHotkey = 'j'
 boHotkey = 'g'
 bcHotkey = 'f'
 attackHotkey = 'F1'
@@ -70,34 +79,49 @@ def get_screen_position(x_percent, y_percent):
     return int(screen_width * x_percent), int(screen_height * y_percent)
 
 def confirmAct1Load():
-    confirmPos = pyautogui.locateOnScreen('images/town/act1/confirm/confirm1.png', confidence=0.45)
-    if confirmPos:
-        print(f"Confirmed Act1 Pos: {confirmPos}")
-        return True
+    try:
+        confirmPos = pyautogui.locateOnScreen('images/town/act1/confirm/confirm1.png', confidence=0.45)
+        if confirmPos:
+            print(f"Confirmed Act1 Pos: {confirmPos}")
+            return True
+    except:
+        print('cant confirm act1')
     
 def confirmAct2Load():
-    confirmPos = pyautogui.locateOnScreen('images/town/act1/confirm/confirm1.png', confidence=0.45)
-    if confirmPos:
-        print(f"Confirmed Act2 Pos: {confirmPos}")
-        return True
-    
+    try:
+        confirmPos = pyautogui.locateOnScreen('images/town/act1/confirm/confirm1.png', confidence=0.45)
+        if confirmPos:
+            print(f"Confirmed Act2 Pos: {confirmPos}")
+            return True
+    except:
+        print('cant confirm act2')
+        
 def confirmAct3Load():
-    confirmPos = pyautogui.locateOnScreen('images/town/act1/confirm/confirm1.png', confidence=0.45)
-    if confirmPos:
-        print(f"Confirmed Act3 Pos: {confirmPos}")
-        return True
-    
+    try:
+        confirmPos = pyautogui.locateOnScreen('images/town/act1/confirm/confirm1.png', confidence=0.45)
+        if confirmPos:
+            print(f"Confirmed Act3 Pos: {confirmPos}")
+            return True
+    except:
+        print('cant confirm act3')
+
 def confirmAct4Load():
-    confirmPos = pyautogui.locateOnScreen('images/town/act4/confirm/confirm1.png', confidence=0.45)
-    if confirmPos:
-        print(f"Confirmed Act4 Pos: {confirmPos}")
-        return True
+    try:
+        confirmPos = pyautogui.locateOnScreen('images/town/act4/confirm/confirm1.png', confidence=0.45)
+        if confirmPos:
+            print(f"Confirmed Act4 Pos: {confirmPos}")
+            return True
+    except:
+        print('cant confirm act4')
 
 def confirmAct5Load():
-    confirmPos = pyautogui.locateOnScreen('images/town/act5/confirm/confirm1.png', confidence=0.45)
-    if confirmPos:
-        print(f"Confirmed Act5 Pos: {confirmPos}")
-        return True
+    try:
+        confirmPos = pyautogui.locateOnScreen('images/town/act5/confirm/confirm1.png', confidence=0.45)
+        if confirmPos:
+            print(f"Confirmed Act5 Pos: {confirmPos}")
+            return True
+    except:
+        print('cant confirm act5')
 
 def whatAct():
     if confirmAct1Load():
@@ -113,23 +137,33 @@ def whatAct():
     
 ## MultiLoad ##
 
-def multi_load_script(leader, game_name, password,battletag = 'none'):
+def multi_load_script(leader, game_name, password,battletag = 'none', firstGame=True):
     #for i in range(1, instance_count + 1):
         #instance_name = f"Diablo II: Resurrected{i}"
         #print(f"Handling instance {instance_name}")
-
+    
     windows = gw.getWindowsWithTitle('Diablo II: Resurrected')
+    print(f'Windows: {windows}')
+    time.sleep(5)
 
-   
     for i, window in enumerate(windows):
         print(f"Window {i+1}: {window.title}, Position: {window.left}, {window.top}")
-
         window.activate()
-        joinGame(game_name, password)
+        joinGame(game_name, password, firstGame)
     waitForLeaderMultiLoader(windows, leader, game_name, password,battletag)
        
 def waitForLeaderMultiLoader(windows, leader, game_name, password,battletag):
     x = 0
+    time.sleep(2)
+    #prep()
+    for window in windows:
+        window.activate()
+        time.sleep(.2)
+        if getWindowByCharName('Hustle-@ne'):
+            print('Found (Hustle-@ne) - Go to river and BO')
+            wpToRiver()
+            prep()
+
     while True:
         x = x + 1
         if (x > 10000):
@@ -138,16 +172,163 @@ def waitForLeaderMultiLoader(windows, leader, game_name, password,battletag):
         print('Waiting for leader to leave')
         chat_text = setup.read_screen_text(region=(0, 650, 650, 930))  # Adjust region to match chat area
         print(f'chat_text: {chat_text}')
-        if (f"{leader} left our world" in chat_text) or (f"{battletag} left our world" in chat_text):
-            print("Leader has left the world")
-            for window in windows:
-                window.activate()
-                time.sleep(.5)
-                save_and_quit()
-                time.sleep(.5)
-            next_game_name = increment_game_name(game_name)
-            multi_load_script(leader,next_game_name,password,battletag)
-            break
+        if battletag:
+            print("in battletag")
+            if (f"{leader} left our world" in chat_text) or (f"{battletag} left our world" in chat_text):
+                print("Leader has left the world")
+                for window in windows:
+                    window.activate()
+                    time.sleep(.5)
+                    save_and_quit()
+                    time.sleep(.5)
+                next_game_name = increment_game_name(game_name)
+                multi_load_script(leader,next_game_name,password,battletag, False)
+                break
+
+            elif(f"help" in chat_text):
+                helpText = "Sit & Listen Traveler.... (help) (pause -> resume) (bo) (chant) (newGame)"
+                sayInGame(helpText)
+                time.sleep(10)
+
+            elif(f"pause" in chat_text):
+                print("PAUSING")
+                sayInGame('Pausing')
+                paused = True
+                while paused:
+                    print('Waiting for leader to resume')
+                    chat_text = setup.read_screen_text(region=(0, 650, 650, 930))  # Adjust region to match chat area
+                    if (f"resume" in chat_text or ""):
+                        paused = False
+                        time.sleep(10)
+                        print('Resuming)')
+            
+            elif(f"bo" in chat_text):
+                print("BO - NOT IMPLEMENTED YET")
+                sayInGame('Not Yet')
+                time.sleep(10)
+                #getBarbScreen
+                #BO
+            
+            elif(f"chant" in chat_text):
+                print("CHANT - NOT IMPLEMENTED YET")
+                sayInGame('Not Yet')
+                time.sleep(10)
+                #getSorcScreen
+                #Chant
+            
+            elif(f"newGame" in chat_text):
+                print("Get New Game Name - NOT IMPLEMENTED YET")
+                sayInGame('Not Yet')
+                time.sleep(10)
+
+            elif(f"leader?" in chat_text):
+                print(f"Leader: {leader}")
+                sayInGame(f'Leader: {leader}')
+                time.sleep(10)
+
+            elif(f'set leader' in chat_text):
+                print(f'Set Leader: - NOT IMPLEMENTED YET')
+                sayInGame('Not Yet')
+                time.sleep(10)
+
+            elif(f'whois retep' in chat_text):
+                print(f'Retep')
+                sayInGame('Retep is the Doomlord of thunderdome. This is what Cain told me anyway.')
+                time.sleep(10)
+
+        else:
+            if (f"{leader} left our world" in chat_text):
+                print("Leader has left the world")
+                #for window in windows:
+                #    window.activate()
+                #    time.sleep(.5)
+                #    save_and_quit()
+                #    time.sleep(.5)
+                multiQuit(windows)
+                next_game_name = increment_game_name(game_name)
+                multi_load_script(leader,next_game_name,password,battletag, False)
+                break
+
+            elif(f"help" in chat_text):
+                helpText = "Sit & Listen Traveler.... (help) (pause -> resume) (bo) (chant) (newGame)"
+                sayInGame(helpText)
+                time.sleep(10)
+
+            elif(f"pause" in chat_text):
+                print("PAUSING")
+                sayInGame('Pausing')
+                paused = True
+                while paused:
+                    print('Waiting for leader to resume')
+                    chat_text = setup.read_screen_text(region=(0, 650, 650, 930))  # Adjust region to match chat area
+                    if (f"resume" in chat_text):
+                        paused = False
+                        time.sleep(10)
+                        print('Resuming)')
+            
+            elif(f"bo" in chat_text):
+                print("BO - NOT IMPLEMENTED YET")
+                sayInGame('Not Yet')
+                time.sleep(10)
+                #getBarbScreen
+                #BO
+            
+            elif(f"chant" in chat_text):
+                print("CHANT - NOT IMPLEMENTED YET")
+                sayInGame('Not Yet')
+                time.sleep(10)
+                #getSorcScreen
+                #Chant
+            
+            elif(f"newGame" in chat_text):
+                print("Get New Game Name - NOT IMPLEMENTED YET")
+                sayInGame('Not Yet')
+                time.sleep(10)
+
+            elif(f"leader?" in chat_text):
+                print(f"Leader: {leader}")
+                sayInGame(f'Leader: {leader}')
+                time.sleep(10)
+
+            elif(f'set leader' in chat_text):
+                print(f'Set Leader: - NOT IMPLEMENTED YET')
+                sayInGame('Not Yet')
+                time.sleep(10)
+
+            elif(f'whois retep' in chat_text):
+                print(f'Retep')
+                sayInGame('Retep is the Doomlord of thunderdome. This is what Cain told me anyway.')
+                time.sleep(10)
+            
+            elif(f'END' in chat_text):
+                print(f'ENDING SCRIPT')
+                sayInGame('GG')
+                multiQuit(windows)
+                return
+            
+
+def getWindowByCharName(name):
+    pyautogui.press('a')
+    nameText = setup.read_screen_text(region=(175, 175, 340, 197))  # Adjust region to match chat area
+    if nameText == name:
+        return True
+
+## INTERACT WITH D2R ##
+def multiQuit(windows):
+    for window in windows:
+        window.activate()
+        time.sleep(.5)
+        save_and_quit()
+        time.sleep(.5)
+
+def sayInGame(text):
+    time.sleep(.3)
+    pyautogui.press('enter')
+    time.sleep(.3)
+    pyautogui.write(text, interval=0.04)
+    time.sleep(.3)
+    pyautogui.press('enter')
+    time.sleep(.3)
 
 ## ACT 4 SHOP ##
 
@@ -235,24 +416,27 @@ def prep():
 def wait_for_tp_and_confirm_leader(leader, game_name, password,battletag):
     print("Starting to search for TPs...")
     while True:
+        print('-----waiting for throne-----')
         try:
             checkLeaderLeft(leader, game_name, password,battletag)
             tp_positions = list(pyautogui.locateAllOnScreen('images/general/tp.png', confidence=0.7))
             if tp_positions:
                 for tp_pos in tp_positions:
                     pyautogui.moveTo(tp_pos)
-                    x, y, w, h = tp_pos.left, tp_pos.top, tp_pos.width, tp_pos.height  # Adjust to top-left corner
-                    text_region = (x - 100, y - 100), (x + 100, y - 50)
+                    #x, y, w, h = tp_pos.left, tp_pos.top, tp_pos.width, tp_pos.height  # Adjust to top-left corner
+                    #text_region = (x - 100, y - 100), (x + 100, y - 50)
                     #text = setup.read_screen_text(region=text_region)
                     #if leader_name in text:
-                    print(f"Leader's TP found at ({x}, {y}).")
-                    time.sleep(10) # wait 15 seconds for safety
-                    pyautogui.click(tp_pos)
-                    return
-                    #else:
-                    #    print(f"TP at ({x}, {y}) is not the leader's TP.")
+                    print(f"TP found at ({x}, {y}).")
+                    time.sleep(1)
+                    if check_if_throne_portal():
+                        time.sleep(5) # wait 15 seconds for safety
+                        pyautogui.click(tp_pos)
+                        return
+                    else:
+                        print('not throne')
             else:
-                print("No TP found, retrying...")
+                print("throne not found, retrying...")
             time.sleep(3)
         except:
             print("failed tp")
@@ -266,9 +450,6 @@ def wait_for_leader_to_leave(leader, game_name, password, battletag ='none'):
         if (x > 100):
             pass
         time.sleep(1)
-
-        sorceress.hydraBaal()
-
         print('Waiting for leader to leave')
         chat_text = setup.read_screen_text(region=(0, 650, 650, 930))  # Adjust region to match chat area
         print(f'chat_text: {chat_text}')
@@ -281,8 +462,7 @@ def wait_for_leader_to_leave(leader, game_name, password, battletag ='none'):
                 #enter_game(next_game_name, password)
                 #time.sleep(10)
                 #chat_text = setup.read_screen_text(region=(0, 650, 600, 930))  # Adjust region to match chat area
-                #if "Your connection has been interrupted" not in chat_text:
-                    #break
+                #if "Your connection has been interrupted" not in 
             break
 
 def checkLeaderLeft(leader, game_name, password,battletag):
@@ -298,16 +478,47 @@ def checkLeaderLeft(leader, game_name, password,battletag):
 def loopBaalLeech(leader,game_name,password, battletag):
     joinGame(game_name, password)
     #confirmAct5Load()
-    #act = whatAct()
-    #print(f'In act: {act}')
+    act = whatAct()
+    print(f'In act: {act}')
     wait_for_tp_and_confirm_leader(leader, game_name, password,battletag)
     preBuff()
     wait_for_leader_to_leave(leader, game_name, password, battletag)
 
 
 
-#Fix if failed to join game
-#Fix if portal opened to area other than Throne
+
+        
+def checkFailedToJoinGame():
+    try:
+        time.sleep(1)
+        failedPos = pyautogui.locateOnScreen(failedToJoinImg, confidence=0.50)
+        if failedPos:
+            print('Failed to join game')
+            time.sleep(2)
+            click_at_percentage(.5/1,.52/1)
+            return True
+        else:
+            return False
+        
+    except:
+        print('cant find failed game')
+        return False
+
+#Version 3 of check portal
+def check_if_throne_portal():
+    try:
+        throneCheck=pyautogui.locateOnScreen('images/general/portalToThrone.png', confidence=0.6)
+        if throneCheck:
+            print('found throne portal')
+            return True
+        else:
+            print('portal not to throne')
+            return False           
+        
+
+    except:
+        print('check if throne portal failed')
+        
 #Fix if two portals opened
 #Fix if Leader leaves before I enter throne room
 
@@ -977,11 +1188,11 @@ def check_end_of_chaos(leader, game_name, password):
     return True
 
 def save_and_quit():
-    time.sleep(2)
+    time.sleep(.3)
     pyautogui.press('esc')
-    time.sleep(1)
+    time.sleep(.4)
     click_at_percentage(950/1900, 525/1200)  # Coordinates based on initial resolution
-    time.sleep(1)
+    #time.sleep(1)
     #pyautogui.press('esc')
     #time.sleep(2)
     pyautogui.click(get_screen_position(950/1900, 525/1200))
@@ -1032,39 +1243,40 @@ def createGame(game_name, password):
     click_at_percentage(*create_game_pos)
     time.sleep(5)
     
-def joinGame(game_name, password):
-    game_name_pos = (.72/1, .16/1)
-    password_pos = (.86/1,.16/1 )
+def joinGame(game_name, password, firstGame = True):
+    game_name_pos = (.7/1, .13/1)
+    password_pos = (.84/1,.13/1 )
     join_game_pos = (.73/1, .60/1)
     attempts = 10
     attemptCounter = 0
 
-    time.sleep(1)
+    time.sleep(.3)
     click_at_percentage(*game_name_pos)
     click_at_percentage(*game_name_pos)
     print(f"Writing game_name - {game_name}.")
     for _ in range(20):
         pyautogui.press('backspace')
-    pyautogui.write(game_name, interval=0.053)
-    time.sleep(.5)
+    pyautogui.write(game_name, interval=0.04)
+    time.sleep(.3)
     
-    click_at_percentage(*password_pos)
-    click_at_percentage(*password_pos)
-    print(f"Writing password - {password}.")
-    for _ in range(20):
-        pyautogui.press('backspace')
-    pyautogui.write(password, interval=0.06)
-    time.sleep(.5)
+    if firstGame and password:
+        click_at_percentage(*password_pos)
+        click_at_percentage(*password_pos)
+        print(f"Writing password - {password}.")
+        for _ in range(20):
+            pyautogui.press('backspace')
+        pyautogui.write(password, interval=0.03)
+        time.sleep(.3)
 
     while attemptCounter < attempts:
         print(f"Joining Game.")
         click_at_percentage(*join_game_pos)
-        time.sleep(1)
+        time.sleep(.5)
 
         failedToJoin = checkFailedToJoinGame()
         if failedToJoin == False:
             return
-        time.sleep(2)
+        #time.sleep(2)
         attemptCounter = attemptCounter + 1
 
     print('Too many join game attempts. Sleeping for long time')
@@ -1082,7 +1294,7 @@ def joinGame(game_name, password):
         
 def checkFailedToJoinGame():
     try:
-        time.sleep(1)
+        time.sleep(.4)
         failedPos = pyautogui.locateOnScreen(failedToJoinImg, confidence=0.50)
         if failedPos:
             print('Failed to join game')
@@ -1168,7 +1380,7 @@ def create_gui():
     battletag_entry.pack(pady=1)
 
     tk.Label(root, text="Select Script", bg=dark_bg, fg=dark_fg).pack(pady=1)
-    run_area = ttk.Combobox(root, values=["Chaos Lead", "Baal Leecher", "MultiLoad"])
+    run_area = ttk.Combobox(root, values=["MultiLoad", "Chaos Lead", "Baal Leecher"])
     run_area.current(0)
     run_area.pack(pady=1)
 
@@ -1188,6 +1400,7 @@ def create_gui():
         password = password_entry.get()
         leader = leader_entry.get()
         battletag = battletag_entry.get()
+        
 
         hasCTA = hasCTAVar.get()
         print(f'Has CTA? : {hasCTA}')
@@ -1217,5 +1430,19 @@ def create_gui():
 
     root.mainloop()
 
+@bot.event
+async def on_ready():
+    #load_data()  # Ensure that data is loaded from JSON when the bot starts\
+    print(f'Bot is online as {bot.user}')
+
+@bot.slash_command(name="hustleload", description="Load fillers into game - (gameName, password, leaderName)")
+async def hustleload(ctx: discord.ApplicationContext, gamename: str, password: str, leader: str):      # Pass in count
+    print('In hustleload():')
+    print(f'gameName: {gamename}   -  password: {password}  -  leaderName: {leader}')
+    multi_load_script(leader, gamename, password, firstGame=True)
+    await ctx.respond(f"Loaded game {gamename} with leader {leader}.")
+
 if __name__ == "__main__":
+    #bot.run('xxxxx')
     create_gui()
+    
