@@ -22,7 +22,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 
-
+#custom_config = r'--oem 1 --psm 6 -l eng+exocet --logfile tesseract_log.txt'
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 speed_multiplier = 0.6  # 10% faster (use 1.1 for 10% slower, etc.)
@@ -73,6 +73,22 @@ pickit_folder = 'pickit'
 # Screen resolution used during initial development
 initial_screen_width = 1900
 initial_screen_height = 1200
+
+def cleanOcr(ocr_text,characterOnly=False):
+    #if characterOnly:  # These can be also Q's instead of O's
+    corrections = {
+        '0': 'O',
+        '@': 'O',
+        '®': 'O',
+        'Â®': 'O',
+        '*': 'O',
+        '|': 'I',
+        '1': 'I',
+        '!': 'I'
+    }
+    for wrong, right in corrections.items():
+        ocr_text = ocr_text.replace(wrong, right)
+    return ocr_text
 
 def get_screen_position(x_percent, y_percent):
     screen_width, screen_height = pyautogui.size()
@@ -310,7 +326,8 @@ def waitForLeaderMultiLoader(windows, leader, game_name, password,battletag):
 def getWindowByCharName(name):
     pyautogui.press('a')
     nameText = setup.read_screen_text(region=(175, 175, 340, 197))  # Adjust region to match chat area
-    if nameText == name:
+    cleanName = cleanOcr(nameText)
+    if cleanName == name:
         return True
 
 ## INTERACT WITH D2R ##
