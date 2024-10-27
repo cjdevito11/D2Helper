@@ -18,6 +18,10 @@ INVENTORY_FILE = 'inventory.json'
 CLEAN_LOG_FILE = 'clean_log.txt'
 LOG_FILE = 'ring_log.txt'
 
+shop_images = ['../../../images/town/act4/jamella/jamella1.jpg','images/town/act4/jamella/jamella2.jpg','images/town/act4/jamella/jamella3.jpg', 'images/town/act4/jamella/jamella4.jpg', 'images/town/act4/jamella/jamella5.jpg','images/town/act4/jamella/jamella6.jpg']
+jamellaGamble = '../../../images/town/act4/jamella/jamellaGamble.jpg'
+
+
 # Load the ring score configuration
 with open('ring_score.json', 'r') as ring_score_json:
     attribute_points = json.load(ring_score_json)
@@ -245,6 +249,88 @@ def locate_on_screen(image_path, retries=5, delay=2):
     print(f"Failed to locate {image_path} after {retries} attempts")
     return None
 
+def get_screen_position(x_percent, y_percent):
+    screen_width, screen_height = pyautogui.size()
+    return int(screen_width * x_percent), int(screen_height * y_percent)
+
+def click_at_percentage(x_percent, y_percent, click='left'):
+    if not (0 <= x_percent <= 1) or not (0 <= y_percent <= 1):
+        print(f"Invalid percentage coordinates: x={x_percent}, y={y_percent}")
+        return
+    x, y = get_screen_position(x_percent, y_percent)
+    pyautogui.moveTo(x, y)
+    if click == 'left':
+        print('Clicking left')
+        pyautogui.click()
+    elif click == 'right':
+        print('Clicking right')
+        pyautogui.click(button='right')
+    else:
+        print(f"Unknown click type: {click}")
+
+def confirmBuy():
+    try:
+        failToBuy = pyautogui.locateCenterOnScreen(failToBuyImage, confidence=0.6)
+        if failToBuy:
+            print(f"Located {failToBuyImage}")
+            return False
+    except Exception as e:
+        print(f"Failed to locate {failToBuyImage}")
+        return True
+
+def walkForGold():
+    goldSteps = [(1825/1900, 1080/1200), (975/1900, 700/1200)]
+    for step in goldSteps:
+        time.sleep(.5)
+        click_at_percentage(*step)
+        time.sleep(2)
+    
+def findShop():
+    print("Looking for Jamella")
+    try:
+        shop_found = False
+        for _ in range(10):
+            for shop_image in shop_images:
+                try:
+                    shopPos = pyautogui.locateOnScreen(shop_image, confidence=0.5)
+                    if shopPos:
+                        time.sleep(.5)
+                        shop_found = True
+                        print(f"Jamella found using {shop_image} at {shopPos}.")
+                        pyautogui.moveTo(shopPos)
+                        pyautogui.click()
+                        time.sleep(3)  # Wait a second to ensure movement
+                        break
+                    else:
+                        print("Can't find Shop.")
+                except:
+                    print(f"Issue locating Jamella - Try again")
+                    time.sleep(1)
+            if shop_found:
+                break
+    except Exception as e:
+        print(f"Couldn't findShop(): {e}")
+        
+def openShopGamble():
+    try:
+        time.sleep(1)
+        gamblePos = pyautogui.locateOnScreen(jamellaGamble,confidence=0.5)
+        if gamblePos:
+            print("Selecting Gamble")
+            pyautogui.moveTo(gamblePos)
+            time.sleep(5)
+            pyautogui.click()
+            time.sleep(1)
+    except Exception as e:
+        print("couldn't open shop")
+
+def restockGold():
+    pyautogui.press('esc')
+    walkForGold()
+    findShop()
+    openShopGamble()
+
+
 def main():
     print("Starting the script.")
     inventory = load_inventory_json()
@@ -265,7 +351,7 @@ def main():
         coords = find_ring_coordinates()
         if coords:
             buy_ring(coords)
-
+            confirmBuy()
             # Simulate adding a ring to the inventory
             ring_added = False
             for col_index in range(INVENTORY_GRID_WIDTH - 1, -1, -1):
