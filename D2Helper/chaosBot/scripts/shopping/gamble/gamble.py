@@ -18,9 +18,10 @@ INVENTORY_FILE = 'inventory.json'
 CLEAN_LOG_FILE = 'clean_log.txt'
 LOG_FILE = 'ring_log.txt'
 
-shop_images = ['../../../images/town/act4/jamella/jamella1.jpg','images/town/act4/jamella/jamella2.jpg','images/town/act4/jamella/jamella3.jpg', 'images/town/act4/jamella/jamella4.jpg', 'images/town/act4/jamella/jamella5.jpg','images/town/act4/jamella/jamella6.jpg']
-jamellaGamble = '../../../images/town/act4/jamella/jamellaGamble.jpg'
-
+shop_images = ['../../../images/town/act4/jamella/jamella1.png','../../../images/town/act4/jamella/jamella2.png','../../../images/town/act4/jamella/jamella3.png', '../../../images/town/act4/jamella/jamella4.png', '../../../images/town/act4/jamella/jamella5.png','../../../images/town/act4/jamella/jamella6.png','../../../images/town/act4/jamella/jamella7.png']
+jamellaGamble = '../../../images/town/act4/jamella/jamellaGamble.png'
+jamellaName = '../../../images/town/act4/jamella/jamellaName.png'
+failToBuyImage = '../../../images/errors/notEnoughGold.png'
 
 # Load the ring score configuration
 with open('ring_score.json', 'r') as ring_score_json:
@@ -125,6 +126,7 @@ class InventoryOverlay:
         self.root.overrideredirect(True)
         self.root.attributes("-topmost", True)
         self.root.attributes("-alpha", 0.8)
+        self.root.geometry("1500x150+1850+200")
         self.inventory_str = StringVar()
         self.label = Label(self.root, textvariable=self.inventory_str, font=("Helvetica", 16), bg="black", fg="white")
         self.label.pack()
@@ -143,7 +145,7 @@ class InventoryOverlay:
 
     def update_position(self):
         screen_width = self.root.winfo_screenwidth()
-        self.root.geometry(f"+{screen_width//2 - 100}+50")
+        self.root.geometry(f"125x125+{(screen_width//2) + 450}+50")
         self.root.update()
 
     def stop_gambling(self):
@@ -154,8 +156,8 @@ class InventoryOverlay:
 
 def get_inventory_corners():
     print("Please click the top-left corner of the inventory.")
-    top_left = (1406, 580)  # Adjust as needed
-    bottom_right = (1835, 825)  # Adjust as needed for 7 columns
+    top_left = (1070, 510)  # Adjust as needed
+    bottom_right = (1530, 715)  # Adjust as needed for 7 columns
     print(f"Top-left corner: {top_left}, Bottom-right corner: {bottom_right}")
     return top_left, bottom_right
 
@@ -279,20 +281,50 @@ def confirmBuy():
         return True
 
 def walkForGold():
-    goldSteps = [(1825/1900, 1080/1200), (975/1900, 700/1200)]
+    goldSteps = [(100,700), (1550, 100),(1550,300),(1550,700),(350,800),(1000,250),(900,600),(350,625),(400,950),(800,750),(1000,650), (900,800)]
+    print(f'Walking for gold:\n Steps: {goldSteps}')
+    pyautogui.moveTo(goldSteps[0])
+    print('Hold Mouse')
+    pyautogui.mouseDown()
     for step in goldSteps:
-        time.sleep(.5)
-        click_at_percentage(*step)
-        time.sleep(2)
+        time.sleep(1)
+        #click_at_percentage(*step)
+        print(f'Move To: {step}')
+        pyautogui.moveTo(step, duration=1)
+    print('Let go of mouse')
+    pyautogui.mouseUp()
+    pyautogui.moveTo(800,275) #walk off corner a little
+    time.sleep(.1)
+    pyautogui.click()
     
+def scanScreenFor(scanImage, conf=0.6):
+    try:
+        for y in range(10):
+            for x in range(50):
+                newX = (x*32) + 32
+                newY = (y*100)+ 10
+                pyautogui.moveTo(newX,newY)
+                try:
+                    print(f'scanScreenFor({scanImage}) @ ({newX},{newY})')
+                    image = pyautogui.locateOnScreen(scanImage, conf)
+                    if image:
+                        print(f'found {scanImage}')
+                        #return True
+                except:
+                    print('fail')
+        #return False
+    except:
+        print(f'scanScreenFor({scanImage}) failed.')
+        #return False
+
 def findShop():
     print("Looking for Jamella")
     try:
         shop_found = False
-        for _ in range(10):
+        for _ in range(5):
             for shop_image in shop_images:
                 try:
-                    shopPos = pyautogui.locateOnScreen(shop_image, confidence=0.5)
+                    shopPos = pyautogui.locateOnScreen(shop_image, confidence=0.6)
                     if shopPos:
                         time.sleep(.5)
                         shop_found = True
@@ -300,14 +332,18 @@ def findShop():
                         pyautogui.moveTo(shopPos)
                         pyautogui.click()
                         time.sleep(3)  # Wait a second to ensure movement
-                        break
+                        return
                     else:
                         print("Can't find Shop.")
                 except:
                     print(f"Issue locating Jamella - Try again")
-                    time.sleep(1)
+                    time.sleep(2)
             if shop_found:
-                break
+                return
+            
+        print('Couldnt find shop with images, lets move mouse across screen')
+        scanScreenFor(jamellaName, conf=0.6)
+
     except Exception as e:
         print(f"Couldn't findShop(): {e}")
         
@@ -318,7 +354,7 @@ def openShopGamble():
         if gamblePos:
             print("Selecting Gamble")
             pyautogui.moveTo(gamblePos)
-            time.sleep(5)
+            time.sleep(2)
             pyautogui.click()
             time.sleep(1)
     except Exception as e:
@@ -326,12 +362,15 @@ def openShopGamble():
 
 def restockGold():
     pyautogui.press('esc')
+    pyautogui.press('esc')
     walkForGold()
     findShop()
     openShopGamble()
+    time.sleep(2)
 
 
 def main():
+    time.sleep(2)
     print("Starting the script.")
     inventory = load_inventory_json()
     top_left, bottom_right = get_inventory_corners()
@@ -351,8 +390,9 @@ def main():
         coords = find_ring_coordinates()
         if coords:
             buy_ring(coords)
-            confirmBuy()
-            # Simulate adding a ring to the inventory
+            if confirmBuy() == False:
+                restockGold()
+            
             ring_added = False
             for col_index in range(INVENTORY_GRID_WIDTH - 1, -1, -1):
                 for row_index in range(INVENTORY_GRID_HEIGHT - 1, -1, -1):

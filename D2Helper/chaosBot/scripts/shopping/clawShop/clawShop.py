@@ -10,18 +10,24 @@ from threading import Thread, Event
 from PIL import ImageGrab
 import pytesseract
 import re
+import utils
 from utils import capture_item_tooltip, extract_text_from_image
+import glob
 
 INVENTORY_GRID_WIDTH = 7  # Reduced to 7 columns
 INVENTORY_GRID_HEIGHT = 4
-SHOP_GRID_WIDTH = 8
+SHOP_GRID_WIDTH = 10
 SHOP_GRID_HEIGHT = 10
-STASH_GRID_WIDTH = 8
+STASH_GRID_WIDTH = 10
 STASH_GRID_HEIGHT = 10
 
 INVENTORY_FILE = 'inventory.json'
 CLEAN_LOG_FILE = 'clean_log.txt'
 LOG_FILE = 'ring_log.txt'
+
+anyaImagesFolder = 'images\\anya'
+tradeButtonImage = 'images\\tradeButton.png'
+#anyaImages = []
 
 # Load the ring score configuration
 with open('clawScore.json', 'r') as clawScorejson:
@@ -44,7 +50,41 @@ expected_stats = {
     'DEXTERITY': ['DEXTERITY'],
     'ENERGY': ['ENERGY'],
     'REPLENISH LIFE': ['REPLENISH LIFE'],
+    'SHADOW DISCIPLINES': ['SHADOW DISCIPLINES']
 }
+
+def clean_ocr_output(ocr_text):
+    corrections = {
+        '@': '0',  # Assuming @ is misinterpreted as 0
+        'Te': 'to',  # Assuming Te is misinterpreted as to
+        'T@': 'to',  # and other similar corrections...
+        'T®': 'to',
+        '+]': '+1',
+        'I to': '1 to',
+        'ST0®LEN': 'STOLEN',
+        '+100% FASTER CAST RATE': '+10% FASTER CAST RATE',
+        '100% FASTER CAST RATE': '10% FASTER CAST RATE',
+        'ST0LEN': 'STOLEN',
+        'SHIFT * LEFT CLICK T® EQUIP pee': '',
+        'CTRL + Left CLick to Meve': '',
+        '4 H0LD SHIFT T® COMPARE ne': '',
+        '4 H0LD SHIFT T® COMPARE i': '',
+        '1Q% FASTER CAST RATE ia': '10% FASTER CAST RATE',
+        'P0IS0N': 'POISON',
+        'P0ISON': 'POISON',
+        'CeLpD': 'COLD',
+        'CeLp': 'COLD',
+        '+1Q00 to ATTACK RATING': '+100 to ATTACK RATING',
+        '+1 Toe SHADOW DisciPLINEs': '+1 to SHADOW DISCIPLINES',
+        '+] to SHADew Disciplines (AssAssiIN ®NLY)': '+1 to SHADOW DISCIPLINES',
+        'SHADew': 'SHADOW',
+        
+        
+
+    }
+    for wrong, right in corrections.items():
+        ocr_text = ocr_text.replace(wrong, right)
+    return ocr_text
 
 def go_through_anya_portal():
     # Find the red portal and go through it
@@ -57,12 +97,65 @@ def go_through_anya_portal():
         time.sleep(5)  # Wait for the portal transition
 
         # After entering, come back through the portal
-        town_portal_coords = locate_on_screen('town_portal.png')  # Assuming you have a screenshot
+        town_portal_coords = locate_on_screen('images/townPortal1.png')  # Assuming you have a screenshot
         if town_portal_coords:
             print(f"Found town portal at {town_portal_coords}, returning to town...")
             pyautogui.moveTo(town_portal_coords)
             pyautogui.click()
             time.sleep(5)  # Wait for transition back to town
+
+def clickTrade():
+    try:
+        tradeButton = pyautogui.locateOnScreen(tradeButtonImage, confidence=0.6)
+        if tradeButton:
+            time.sleep(.5)
+            pyautogui.moveTo(tradeButton)
+            pyautogui.click()
+            time.sleep(1)
+    except:
+        print('Failed to click Trade')
+
+def clickWeapons():
+    print('Click weapon Tab in shop')
+    time.sleep(1)
+    pyautogui.moveTo(250,150)
+    time.sleep(.5)
+    pyautogui.click()
+    time.sleep(.5)
+
+def clickNPC(npcImages, trade, npcName='NPC'):
+    print(f"Looking for {npcName} from images: {npcImages}")
+    try:
+        npcFound = False
+        for _ in range(10):
+            for npcImage in npcImages:
+                print(f'npcImage: {npcImage}')
+                try:
+                    npcPos = pyautogui.locateOnScreen(npcImage, confidence=0.6)
+                    if npcPos:
+                        time.sleep(.5)
+                        npcFound = True
+                        print(f"{npcName} found using {npcImage} at {npcPos}.")
+                        pyautogui.moveTo(npcPos)
+                        pyautogui.click()
+                        time.sleep(3)
+
+                        if trade:
+                            clickTrade()
+                            time.sleep(.5)
+                            clickWeapons()
+                        break
+                    else:
+                        print("Can't find Shop.")
+                except:
+                    print(f"Issue locating shop - Try again")
+                    time.sleep(1)
+            if npcFound:
+                break
+    except Exception as e:
+        print(f"Couldn't findShop(): {e}")
+
+
 
 def find_ring_coordinates():
     print("Attempting to find ring coordinates...")
@@ -80,30 +173,58 @@ def find_ring_coordinates():
 
 def scan_for_claws():
     print("Scanning shop for claws...")
-    claw_positions = [
-        (100, 200), (300, 200), (500, 200),  # Add specific coordinates where claws are likely found
-        (100, 400), (300, 400), (500, 400)
-    ]
-    print("Attempting to find ring coordinates...")
-    clawTypeOneCoords = locate_on_screen('images/claw1.png')
-    clawTypeTwoCoords = locate_on_screen('images/claw2.png')
+    # Shop grid parameters
+    shop_top_left = (70, 170)
+    shop_bottom_right = (580, 685)
+    cell_width = (shop_bottom_right[0] - shop_top_left[0]) / SHOP_GRID_WIDTH
+    cell_height = (shop_bottom_right[1] - shop_top_left[1]) / SHOP_GRID_HEIGHT
+
+    # Claw dimensions in grid cells
+    claw_width_cells = 1
+    claw_height_cells = 3
+
+    # We are only interested in the first 3 columns (max of 3 columns wide)
+    max_columns = 3
+
     claws_found = []
-    for pos in claw_positions:
-        pyautogui.moveTo(pos)
-        pyautogui.click()  # Click the claw item in shop
-        time.sleep(1)  # Wait for tooltip to load
-        tooltip_area = (pos[0], pos[1], pos[0] + 200, pos[1] + 400)
-        tooltip_text = capture_item_tooltip(tooltip_area)
-        stats = parse_item_stats(tooltip_text, expected_stats)
-        score = calculate_item_score(stats, attribute_points)
-        
-        if score >= 3:
-            print(f"Claw at {pos} has score: {score}. Considering purchase.")
-            claws_found.append(pos)
-        else:
-            print(f"Claw at {pos} did not meet score criteria.")
-    
+
+    for col in range(max_columns):
+        for row in range(SHOP_GRID_WIDTH - claw_height_cells + 1):
+            # Calculate center position of the claw
+            x = shop_top_left[0] + col * cell_width + cell_width / 2
+            y = shop_top_left[1] + (row + claw_height_cells / 2) * cell_height
+
+            pyautogui.moveTo(x, y)
+            #pyautogui.click()  # Click the claw item in shop to bring up tooltip
+            time.sleep(1)  # Wait for tooltip to load
+
+            # Define the tooltip area to capture (adjust as necessary)
+            tooltip_area = (
+                int(x - 300),  # left
+                int(y - 500),  # top
+                int(x + 500),  # right
+                int(y + 500)   # bottom
+            )
+            image = capture_item_tooltip(tooltip_area)
+            tooltip_text = extract_text_from_image(image)
+            clean_text = clean_ocr_output(tooltip_text)
+            stats = parse_item_stats(clean_text, expected_stats)
+            score = calculate_item_score(stats, attribute_points)
+
+            print(f"Claw at position (col: {col}, row: {row}) has score: {score}. Considering purchase.")
+            print(f'tooltip_text = {tooltip_text}')
+            print(f'clean_text = {clean_text}')
+
+
+            if score >= 3:
+                print(f"Claw at position (col: {col}, row: {row}) has score: {score}. Purchase.")
+                claws_found.append((x, y))
+            else:
+                print(f"Claw at position (col: {col}, row: {row}) did not meet score criteria.")
+    print(f"Claws Found: {claws_found}")
+    time.sleep(2)
     return claws_found
+
 
 def update_inventory_for_claw(inventory, row, col):
     # Claws take 3 vertical slots, update the inventory accordingly
@@ -119,8 +240,18 @@ def buy_claw(coords):
     print("--Bought Claw--")
     time.sleep(1)  # Wait between purchases
 
-def clawLoop(stop_event, overlay):
+def clawLoop(stop_event, overlay, anyaImages):
+    inventory = load_inventory_json()
+    top_left, bottom_right = get_inventory_corners()
+    invCoords = get_grid_coordinates(top_left, bottom_right, 'inventory')
+
     while not is_inventory_full(inventory):
+
+        print(f'Click Anya: {anyaImages}')
+        clickNPC(anyaImages,True,'Anya')
+        print('Clicked Anya')
+        time.sleep(1)
+
         if stop_event.is_set():
             print("Claw shopping stopped by user.")
             break
@@ -133,7 +264,7 @@ def clawLoop(stop_event, overlay):
             claw_added = False
             for col_index in range(INVENTORY_GRID_WIDTH - 1, -1, -1):
                 for row_index in range(INVENTORY_GRID_HEIGHT - 3, -1, -1):  # Check 3 vertical slots
-                    x, y = grid_coords[col_index][row_index]
+                    x, y = invCoords[col_index][row_index]
                     row = INVENTORY_GRID_HEIGHT - 1 - row_index
                     col = INVENTORY_GRID_WIDTH - 1 - col_index
                     if inventory[row][col] == 0 and inventory[row + 1][col] == 0 and inventory[row + 2][col] == 0:
@@ -142,7 +273,7 @@ def clawLoop(stop_event, overlay):
                         time.sleep(4.4)
                         score, stats = inspect_ring_at(x, y)
                         print(f"Claw score: {score}")
-                        kept = score >= 3
+                        kept = score >= 1
                         if kept:
                             inventory = update_inventory_for_claw(inventory, row, col)
                         else:
@@ -158,33 +289,37 @@ def clawLoop(stop_event, overlay):
                     break
         
         # Refresh the shop by going through the portal
+        pyautogui.press('esc')
         go_through_anya_portal()
+        clawLoop(stop_event, overlay, anyaImages)
 
+def setupClawShop(stop_event,overlay):
+    #global anyaImages
+    anyaImages = getImagesFromFolder(anyaImagesFolder)
 
-def clean_ocr_output(ocr_text):
-    corrections = {
-        '@': '0',  # Assuming @ is misinterpreted as 0
-        'Te': 'to',  # Assuming Te is misinterpreted as to
-        'T@': 'to',  # and other similar corrections...
-        'T®': 'to',
-        'ST0®LEN': 'STOLEN',
-        '+100% FASTER CAST RATE': '+10% FASTER CAST RATE',
-        '100% FASTER CAST RATE': '10% FASTER CAST RATE',
-        'ST0LEN': 'STOLEN',
-        'SHIFT * LEFT CLICK T® EQUIP pee': '',
-        'CTRL + Left CLick to Meve': '',
-        '4 H0LD SHIFT T® COMPARE ne': '',
-        '4 H0LD SHIFT T® COMPARE i': '',
-        '1Q% FASTER CAST RATE ia': '10% FASTER CAST RATE',
-        'P0IS0N': 'POISON',
-        'P0ISON': 'POISON',
-        'CeLpD': 'COLD',
-        'CeLp': 'COLD',
-        '+1Q00 to ATTACK RATING': '+100 to ATTACK RATING'
-    }
-    for wrong, right in corrections.items():
-        ocr_text = ocr_text.replace(wrong, right)
-    return ocr_text
+    print("Setup Claw Shop - Walk to Anya")
+    walkToAnya()
+    print("Setup Claw Shop - Start Claw Loop")
+    clawLoop(stop_event, overlay, anyaImages)
+
+def walkToAnya():
+    spawnToAnya = [
+        (450, 850), 
+        (580, 790), 
+        (495,830), 
+        (775,795), 
+        (935,600), 
+        (200,800),
+        (650,750),
+        (60,200)
+    ]
+
+    for step in spawnToAnya:
+        print(f'Step: {step}')
+        #x, y = step
+        pyautogui.moveTo(step)
+        pyautogui.click()
+        time.sleep(2)
 
 def parse_item_stats(text, expected_stats):
     stats = {}
@@ -270,8 +405,8 @@ class InventoryOverlay:
 
 def get_inventory_corners():
     print("Please click the top-left corner of the inventory.")
-    top_left = (1406, 580)  # Adjust as needed
-    bottom_right = (1835, 825)  # Adjust as needed for 7 columns
+    top_left = (1070, 520)  # Adjust as needed
+    bottom_right = (1530, 720)  # Adjust as needed for 7 columns
     print(f"Top-left corner: {top_left}, Bottom-right corner: {bottom_right}")
     return top_left, bottom_right
 
@@ -375,60 +510,31 @@ def locate_on_screen(image_path, retries=5, delay=2):
     print(f"Failed to locate {image_path} after {retries} attempts")
     return None
 
+def getImagesFromFolder(folder_path):
+    image_extensions = ('*.jpg', '*.jpeg', '*.png', '*.gif', '*.bmp')
+    image_paths = []
+    for ext in image_extensions:
+        pattern = os.path.join(folder_path, ext)
+        print(f"Searching for files matching: {pattern}")
+        found_files = glob.glob(pattern)
+        print(f"Found files: {found_files}")
+        image_paths.extend(found_files)
+    return image_paths
+
 # Modified main loop for claws instead of rings
 def main():
-    print("Starting the claw gambling script.")
+    print("Start Shop - Inventory Overlay")
     inventory = load_inventory_json()
-    top_left, bottom_right = get_inventory_corners()
-    grid_coords = get_grid_coordinates(top_left, bottom_right, 'inventory')
 
     stop_event = Event()
     overlay = InventoryOverlay(inventory, stop_event)
     overlay_thread = Thread(target=overlay.start)
     overlay_thread.start()
 
-    while not is_inventory_full(inventory):
-        if stop_event.is_set():
-            print("Claw shopping stopped by user.")
-            break
-        
-        claws = scan_for_claws()
-        for claw_pos in claws:
-            buy_claw(claw_pos)
-            
-            # Simulate adding a claw to the inventory
-            claw_added = False
-            for col_index in range(INVENTORY_GRID_WIDTH - 1, -1, -1):
-                for row_index in range(INVENTORY_GRID_HEIGHT - 3, -1, -1):  # Check 3 vertical slots
-                    x, y = grid_coords[col_index][row_index]
-                    row = INVENTORY_GRID_HEIGHT - 1 - row_index
-                    col = INVENTORY_GRID_WIDTH - 1 - col_index
-                    if inventory[row][col] == 0 and inventory[row + 1][col] == 0 and inventory[row + 2][col] == 0:
-                        print(f"** --- Inspect claw at: ({x}, {y}) --- **")
-                        pyautogui.moveTo(x, y)
-                        time.sleep(4.4)
-                        score, stats = inspect_ring_at(x, y)
-                        print(f"Claw score: {score}")
-                        kept = score >= 3
-                        if kept:
-                            inventory = update_inventory_for_claw(inventory, row, col)
-                        else:
-                            pyautogui.keyDown('ctrl')
-                            pyautogui.leftClick(x, y)
-                            pyautogui.keyUp('ctrl')
-                        update_inventory_json(inventory)
-                        overlay.update_inventory(inventory)
-                        log_ring_info(score, stats, kept)
-                        claw_added = True
-                        break
-                if claw_added:
-                    break
-        
-        # Refresh the shop by going through the portal
-        go_through_anya_portal()
-        clawLoop(stop_event, overlay)
-
-    print("Finished processing.")
+    time.sleep(3)
+    print("Starting the claw gambling script.")
+    setupClawShop(stop_event, overlay)
+    print("Finished.")
 
 if __name__ == "__main__":
     main()
