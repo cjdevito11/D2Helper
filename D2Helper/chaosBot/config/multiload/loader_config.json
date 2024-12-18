@@ -1,0 +1,6 @@
+{
+    "loaders": [
+        {"name": "BO", "type": "BO", "Diablo II - BO": ""},
+        {"name": "Enchant Sorc", "type": "Chant", "Diablo II - Chant": ""}
+    ]
+}

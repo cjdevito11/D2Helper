@@ -13,6 +13,10 @@ import setup
 import subprocess
 import discord
 from discord.ext import commands
+from scripts.workers.window_setup import setup_windows
+from scripts.workers.multi_load import send_click_to_window, send_keys_to_window
+from scripts.workers.config_loader import load_config
+import win32gui
 
 intents = discord.Intents.default()
 intents.typing = True
@@ -152,22 +156,103 @@ def whatAct():
         return '5'
     
 ## MultiLoad ##
+   
+def get_window_by_class(class_type):
+    """Retrieve window title based on class type from the config."""
+    config = load_config()
+    for loader in config["loaders"]:
+        if loader["type"] == class_type:
+            return loader["window_title"]
+    return None
 
 def multi_load_script(leader, game_name, password,battletag = 'none', firstGame=True):
-    #for i in range(1, instance_count + 1):
-        #instance_name = f"Diablo II: Resurrected{i}"
-        #print(f"Handling instance {instance_name}")
-    
-    windows = gw.getWindowsWithTitle('Diablo II: Resurrected')
-    print(f'Windows: {windows}')
+    config = load_config()
+    setup_windows(config)
+    windows = [loader["window_title"] for loader in config["loaders"] if loader["window_title"]]
+
+    print(f"Starting multi-load for windows: {windows}")
     time.sleep(5)
 
-    for i, window in enumerate(windows):
-        print(f"Window {i+1}: {window.title}, Position: {window.left}, {window.top}")
-        window.activate()
-        joinGame(game_name, password, firstGame)
+    for window in windows:
+        print(f"Joining game on window: {window}")
+        time.sleep(1)  # Delay between actions
+        joinMultiGame(window, game_name, password, firstGame)
     waitForLeaderMultiLoader(windows, leader, game_name, password,battletag)
-       
+    print("Multi-load complete.")
+
+
+def joinMultiGame(window_title, game_name, password, firstGame=True):
+    game_name_pos = (.7/1, .13/1)
+    password_pos = (.84/1,.13/1 )
+    join_game_pos = (.73/1, .60/1)
+    attempts = 10
+    attemptCounter = 0
+
+    time.sleep(0.3)
+    send_click_to_window(window_title, *game_name_pos)
+    time.sleep(0.1)
+    print(f"Writing game_name - {game_name}.")
+    send_keys_to_window(window_title, game_name)
+    time.sleep(0.3)
+    
+    if firstGame and password:
+        send_click_to_window(window_title, *password_pos)
+        time.sleep(0.1)
+        print(f"Writing password - {password}.")
+        send_keys_to_window(window_title, password)
+        time.sleep(0.3)
+
+    while attemptCounter < attempts:
+        print(f"Joining Game.")
+        send_click_to_window(window_title, *join_game_pos)
+        time.sleep(2)  # Increase delay to check if the join was successful
+
+
+        failedToJoin = checkFailedToJoinGame()  
+        if not failedToJoin:
+            return
+
+        attemptCounter += 1
+
+    print('Too many join game attempts. Sleeping for a long time.')
+    time.sleep(1000000)
+    sys.exit()
+
+def preBuffMulti(window_title, bcHotkey="F1", boHotkey="F2"):
+    global hasCTA
+    time.sleep(1)
+    if hasCTA:
+        # Switch to CTA weapon
+        send_keys_to_window(window_title, "w")
+        time.sleep(0.5)
+
+        # Battle Command sequence
+        for _ in range(2):
+            send_keys_to_window(window_title, bcHotkey)
+            time.sleep(0.4)
+
+        # Battle Orders sequence
+        for _ in range(2):
+            send_keys_to_window(window_title, boHotkey)
+            time.sleep(0.4)
+
+        # Repeat BC and BO
+        for _ in range(2):
+            send_keys_to_window(window_title, bcHotkey)
+            time.sleep(0.4)
+            send_keys_to_window(window_title, boHotkey)
+            time.sleep(0.4)
+
+        # Switch back to main weapon
+        send_keys_to_window(window_title, "w")
+        time.sleep(1)
+
+def setWindow(window_title):
+    hwnd = win32gui.FindWindow(None, window_title)
+    if hwnd:
+        win32gui.SetForegroundWindow(hwnd)
+        time.sleep(1)
+
 def waitForLeaderMultiLoader(windows, leader, game_name, password,battletag):
     x = 0
     time.sleep(2)
@@ -178,7 +263,7 @@ def waitForLeaderMultiLoader(windows, leader, game_name, password,battletag):
         if getWindowByCharName('Hustle-@ne'):
             print('Found (Hustle-@ne) - Go to river and BO')
             wpToRiver()
-            prep()
+            #prebuff()
 
     while True:
         x = x + 1
@@ -219,17 +304,25 @@ def waitForLeaderMultiLoader(windows, leader, game_name, password,battletag):
                         print('Resuming)')
             
             elif(f"bo" in chat_text):
-                print("BO - NOT IMPLEMENTED YET")
-                sayInGame('Not Yet')
-                time.sleep(10)
-                #getBarbScreen
-                #BO
+                print("BO - Testing")
+                sayInGame('BO at River')
+                bo_window = get_window_by_class("BO")
+                if bo_window:
+                    print(f"Found BO Barb window: {bo_window}")
+                    print(f'PrebuffMulti - bo_window.title: {bo_window.title} - bo_window: {bo_window}')
+                    setWindow(bo_window.title)
+                    wpToRiver()
+                    preBuff()
+                else:
+                    print("BO Barb window not found in config.")
+                time.sleep(1)
+
             
             elif(f"chant" in chat_text):
-                print("CHANT - NOT IMPLEMENTED YET")
-                sayInGame('Not Yet')
-                time.sleep(10)
-                #getSorcScreen
+                print("Chant - Testing")
+                sayInGame('Chant by a1 tent')
+                bo_window = get_window_by_class("Chant")
+                time.sleep(1)
                 #Chant
             
             elif(f"newGame" in chat_text):
@@ -1365,7 +1458,7 @@ def create_gui():
     global hasCTA
     root = tk.Tk()
     root.title("AuraBot")
-    root.geometry("300x400+1610+750")
+    root.geometry("300x400+1210+75")
     root.attributes('-alpha', 0.9)
 
     # Set the overall theme to dark
