@@ -388,17 +388,25 @@ def waitForLeaderMultiLoader(windows, leader, game_name, password,battletag):
                         print('Resuming)')
             
             elif(f"bo" in chat_text):
-                print("BO - NOT IMPLEMENTED YET")
-                sayInGame('Not Yet')
-                time.sleep(10)
-                #getBarbScreen
-                #BO
+                print("BO - Testing")
+                sayInGame('BO at River')
+                bo_window = get_window_by_class("BO")
+                if bo_window:
+                    print(f"Found BO Barb window: {bo_window}")
+                    print(f'PrebuffMulti - bo_window.title: {bo_window.title} - bo_window: {bo_window}')
+                    setWindow(bo_window.title)
+                    wpToRiver()
+                    preBuff()
+                else:
+                    print("BO Barb window not found in config.")
+                time.sleep(1)
+
             
             elif(f"chant" in chat_text):
-                print("CHANT - NOT IMPLEMENTED YET")
-                sayInGame('Not Yet')
-                time.sleep(10)
-                #getSorcScreen
+                print("Chant - Testing")
+                sayInGame('Chant by a1 tent')
+                bo_window = get_window_by_class("Chant")
+                time.sleep(1)
                 #Chant
             
             elif(f"newGame" in chat_text):
