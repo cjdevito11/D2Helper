@@ -321,8 +321,8 @@ def waitForLeaderMultiLoader(windows, leader, game_name, password,battletag):
                 bo_window = get_window_by_class("BO")
                 if bo_window:
                     print(f"Found BO Barb window: {bo_window}")
-                    print(f'PrebuffMulti - bo_window.title: {bo_window.title} - bo_window: {bo_window}')
-                    setWindow(bo_window.title)
+                    print(f'PrebuffMulti - bo_window: {bo_window}')
+                    setWindow(bo_window)
                     wpToRiver()
                     preBuff()
                 else:
