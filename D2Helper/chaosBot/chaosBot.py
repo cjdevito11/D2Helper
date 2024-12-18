@@ -17,6 +17,7 @@ from scripts.workers.window_setup import setup_windows
 from scripts.workers.multi_load import send_click_to_window, send_keys_to_window
 from scripts.workers.config_loader import load_config
 import win32gui
+import win32con
 
 intents = discord.Intents.default()
 intents.typing = True
@@ -156,7 +157,14 @@ def whatAct():
         return '5'
     
 ## MultiLoad ##
-   
+def activate_window_by_handle(hwnd):
+    try:
+        win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)  # Restore if minimized
+        win32gui.SetForegroundWindow(hwnd)  # Bring to foreground
+        print(f'Activated window with handle: {hwnd}')
+    except Exception as e:
+        print(f'Error activating window: {e}')
+
 def get_window_by_class(class_type):
     """Retrieve window title based on class type from the config."""
     config = load_config()
@@ -167,16 +175,28 @@ def get_window_by_class(class_type):
 
 def multi_load_script(leader, game_name, password,battletag = 'none', firstGame=True):
     config = load_config()
+    print('Setup Window')
     setup_windows(config)
+    print('setup')
     windows = [loader["window_title"] for loader in config["loaders"] if loader["window_title"]]
-
     print(f"Starting multi-load for windows: {windows}")
     time.sleep(5)
 
-    for window in windows:
-        print(f"Joining game on window: {window}")
-        time.sleep(1)  # Delay between actions
-        joinMultiGame(window, game_name, password, firstGame)
+    for windowName in windows:
+        print(f"Joining game on windowName: {windowName}")
+        time.sleep(.3)  # Delay between actions
+
+        matched_windows = gw.getWindowsWithTitle(windowName)
+        if matched_windows:
+            window = matched_windows[0]  # Take the first matching window
+            print(f"Joining game on window: {window}")
+            activate_window_by_handle(window._hWnd)
+        else:
+            print(f"No window found with title: {windowName}")
+            continue 
+
+        time.sleep(.3)
+        joinGame(game_name, password, firstGame)
     waitForLeaderMultiLoader(windows, leader, game_name, password,battletag)
     print("Multi-load complete.")
 
@@ -256,14 +276,6 @@ def setWindow(window_title):
 def waitForLeaderMultiLoader(windows, leader, game_name, password,battletag):
     x = 0
     time.sleep(2)
-    #prep()
-    for window in windows:
-        window.activate()
-        time.sleep(.2)
-        if getWindowByCharName('Hustle-@ne'):
-            print('Found (Hustle-@ne) - Go to river and BO')
-            wpToRiver()
-            #prebuff()
 
     while True:
         x = x + 1
@@ -1433,10 +1445,13 @@ def post_to_discord(game_name, password):
         time.sleep(1)
 
 def refocus_diablo_window():
-    diablo_window = gw.getWindowsWithTitle('Diablo II: Resurrected')[0]
-    if diablo_window:
-        diablo_window.activate()
-        time.sleep(2)
+    try:
+        diablo_window = gw.getWindowsWithTitle('Diablo II: Resurrected')[0]
+        if diablo_window:
+            diablo_window.activate()
+            time.sleep(2)
+    except:
+        print('Failed to refocus on d2 window')
  
 def loopDiabloLead(leader, game_name, password):
     #post_to_discord(game_name, password)

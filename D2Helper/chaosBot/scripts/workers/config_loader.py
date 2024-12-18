@@ -1,6 +1,7 @@
 import json
+import os
 
-CONFIG_FILE = "../../config/multiload/loader_config.json"
+CONFIG_FILE = os.path.abspath('config/multiload/loader_config.json')
 
 # Default loader configuration
 default_config = {
