@@ -275,6 +275,7 @@ def setWindow(window_title):
 
 def waitForLeaderMultiLoader(windows, leader, game_name, password,battletag):
     x = 0
+    boInRiver = False
     time.sleep(2)
 
     while True:
@@ -318,13 +319,18 @@ def waitForLeaderMultiLoader(windows, leader, game_name, password,battletag):
             elif(f"bo" in chat_text):
                 print("BO - Testing")
                 sayInGame('BO at River')
-                bo_window = get_window_by_class("BO")
+                #bo_window = get_window_by_class("BO")
+                bo_window = gw.getWindowsWithTitle('BO')[0]
                 if bo_window:
                     print(f"Found BO Barb window: {bo_window}")
                     print(f'PrebuffMulti - bo_window: {bo_window}')
-                    setWindow(bo_window)
-                    wpToRiver()
+                    bo_window.activate()
+                    #setWindow(bo_window)
+                    #wpToRiver()
+                    if boInRiver == False:
+                        wpToRiverUsingCoords(bo_window)
                     preBuff()
+                    boInRiver = True
                 else:
                     print("BO Barb window not found in config.")
                 time.sleep(1)
@@ -390,13 +396,15 @@ def waitForLeaderMultiLoader(windows, leader, game_name, password,battletag):
             elif(f"bo" in chat_text):
                 print("BO - Testing")
                 sayInGame('BO at River')
-                bo_window = get_window_by_class("BO")
+                bo_window = gw.getWindowsWithTitle('BO')[0]
                 if bo_window:
                     print(f"Found BO Barb window: {bo_window}")
-                    print(f'PrebuffMulti - bo_window.title: {bo_window.title} - bo_window: {bo_window}')
-                    setWindow(bo_window.title)
-                    wpToRiver()
+                    bo_window.activate()
+                    #wpToRiver()
+                    if boInRiver == False:
+                        wpToRiverUsingCoords(bo_window)
                     preBuff()
+                    boInRiver = True
                 else:
                     print("BO Barb window not found in config.")
                 time.sleep(1)
@@ -915,6 +923,57 @@ def click_at_percentage(x_percent, y_percent, click='left'):
         pyautogui.click(button='right')
     else:
         print(f"Unknown click type: {click}")
+
+# Function to convert percentage-based coordinates to absolute pixel coordinates
+def percent_to_pixel(window, percent_coords):
+    x_pixel = window.left + int(window.width * percent_coords[0])
+    y_pixel = window.top + int(window.height * percent_coords[1])
+    return x_pixel, y_pixel
+
+def wpToRiverUsingCoords(window):
+    print("Starting to search for Waypoint...")
+
+    # Ensure the window is active and focused
+    window.activate()
+    time.sleep(1)  # Give time for the window to focus
+
+    x = 0
+    while True:
+        try:
+            # Waypoint position in percentage (83.5%, 10.75%)
+            waypoint_position = percent_to_pixel(window, (0.835, 0.1075))
+            pyautogui.moveTo(waypoint_position)
+            pyautogui.click()
+            print(f"Clicked waypoint at {waypoint_position}.")
+            time.sleep(4)
+
+            try:
+                # River position in percentage (20%, 31%)
+                riverPos = percent_to_pixel(window, (0.2, 0.31))
+                if riverPos:
+                    print(f"River found at {riverPos}.")
+                    pyautogui.moveTo(riverPos)
+                    pyautogui.click()
+                    time.sleep(3)
+
+                    while x == 0:
+                        # River waypoint position in percentage (40%, 40%)
+                        riverwaypoint_position = percent_to_pixel(window, (0.4, 0.4))
+                        
+                        print(f"Waypoint found at {riverwaypoint_position}.")
+                        pyautogui.moveTo(riverwaypoint_position)
+                        pyautogui.press(teleHotkey)
+                        x = 1
+                        time.sleep(2)
+                    break
+                else:
+                    print("Found WP, Can't find River.")
+            except Exception as e:
+                print(f"Error while searching for river: {e}")
+            time.sleep(5)
+        except Exception as e:
+            print(f"Failed to locate waypoint: {e}")
+            time.sleep(5)
 
 
 def wpToRiver():

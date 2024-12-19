@@ -1,6 +1,6 @@
 {
     "loaders": [
-        {"name": "BO", "type": "BO", "Diablo II - BO": ""},
-        {"name": "Enchant Sorc", "type": "Chant", "Diablo II - Chant": ""}
+        {"name": "BO", "type": "BO", "window_title": "BO"},
+        {"name": "Enchant Sorc", "type": "Chant", "window_title": "Chant"}
     ]
 }
