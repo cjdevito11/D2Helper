@@ -454,7 +454,8 @@ def getWindowByCharName(name):
 ## INTERACT WITH D2R ##
 def multiQuit(windows):
     for window in windows:
-        window.activate()
+        real_window = gw.getWindowsWithTitle(window)[0]
+        real_window.activate()
         time.sleep(.5)
         save_and_quit()
         time.sleep(.5)
