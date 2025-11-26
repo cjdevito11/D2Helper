@@ -73,7 +73,12 @@ def get_rune_positions(template_folder):
         if filename.lower().endswith(".png"):
             template_path = os.path.join(template_folder, filename)
             rune_name = os.path.splitext(os.path.basename(template_path))[0]
-            grouped_matches, count = count_images_on_screen(template_path)
+            result = count_images_on_screen(template_path)
+            if isinstance(result, tuple) and len(result) == 2:
+                grouped_matches, count = result
+            else:
+                grouped_matches = result if result is not None else []
+                count = len(grouped_matches)
             runes_positions[rune_name] = {'positions': grouped_matches, 'count': count}
     return runes_positions
 
