@@ -8,6 +8,7 @@ import pyautogui
 import time
 import os
 import re
+import pytesseract
 
 # Global variables
 global_x = 0
