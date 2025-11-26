@@ -11,6 +11,12 @@ from utils import load_config, shut_down, print_mouse_coords_relative_to_hwnd, c
 
 hotkeys_registered = False
 shutdown_flag = False
+menu_window = None
+menu_visible = True
+stored_menu_geometry = None
+root_default_geometry = "25x25+1500+25"
+root_expanded_alpha = 1.0
+root_minimized_alpha = 0.7
 
 def feature_selected(event, root):
     feature = event.widget.get()
@@ -33,12 +39,43 @@ def feature_selected(event, root):
         root.destroy()  # This will close the application
 
 def adjust_menu_window_size(feature):
+    if not menu_window:
+        return
     if feature == "Runes":
         menu_window.geometry("1000x300+1270+45")  # Adjust size for runes interface
     elif feature == "Rings":
         menu_window.geometry("600x400+1270+45")  # Adjust size for rings interface
     elif feature == "Terror Tracker":
         menu_window.geometry("800x400+1270+45")  # Adjust size for terror tracker
+
+
+def toggle_menu(root):
+    global menu_visible, stored_menu_geometry
+
+    if not menu_window:
+        return
+
+    if menu_visible:
+        stored_menu_geometry = menu_window.winfo_geometry()
+        menu_window.withdraw()
+        root.attributes("-alpha", root_minimized_alpha)
+        root.geometry(root_default_geometry)
+        menu_visible = False
+        if hasattr(root, "expand_button"):
+            root.expand_button.config(text="Show")
+    else:
+        menu_window.deiconify()
+        menu_window.attributes("-alpha", 0.9)
+        menu_window.attributes("-topmost", True)
+        if stored_menu_geometry:
+            menu_window.geometry(stored_menu_geometry)
+        else:
+            menu_window.geometry("200x100+1270+45")
+        root.attributes("-alpha", root_expanded_alpha)
+        root.geometry(root_default_geometry)
+        menu_visible = True
+        if hasattr(root, "expand_button"):
+            root.expand_button.config(text="Hide")
 
 def setup_menu_window(root):
     global menu_window
@@ -102,15 +139,17 @@ def main():
     root = tk.Tk()
     root.overrideredirect(True)
     root.attributes('-topmost', True)
-    root.geometry('25x25+1500+25')
+    root.geometry(root_default_geometry)
+    root.attributes('-alpha', root_expanded_alpha)
 
     # Set the background to a specific color that will be made transparent
     root.config(bg='white')
     root.attributes('-transparentcolor', 'white')
 
-    expand_button = tk.Button(root, text="^", command=lambda: toggle_menu(root))
+    expand_button = tk.Button(root, text="Hide", command=lambda: toggle_menu(root))
     expand_button.pack(fill="both", expand=True)
     expand_button.config(bg='grey')
+    root.expand_button = expand_button
 
     setup_menu_window(root)  # Initialize the dropdown menu window
 
